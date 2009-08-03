@@ -1,4 +1,4 @@
-# geograph robot exclusion file
+# www.geograph.org.uk robot exclusion file
 # * $Id$
 
 User-agent: *
@@ -31,8 +31,10 @@ Disallow: /browse.php
 Disallow: /location.php
 Disallow: /gridref/
 Disallow: /ecard.php
+Disallow: /show_exif.php
 Disallow: /export.
 Disallow: /tile.php
+Disallow: /auth.php
 Disallow: /feed/userid/
 Disallow: /feed/results
 Disallow: /export.excel.xml.php
@@ -79,8 +81,10 @@ Disallow: /browse.php?
 Disallow: /location.php
 Disallow: /gridref/
 Disallow: /ecard.php
+Disallow: /show_exif.php
 Disallow: /export.
 Disallow: /tile.php
+Disallow: /auth.php
 Disallow: /feed/userid/
 Disallow: /feed/results
 Disallow: /export.excel.xml.php

@@ -132,7 +132,7 @@ class RasterMap
 					$this->service = 'VoB';
 				} 
 			} elseif(($this->exactPosition || in_array('Grid',$services)) && in_array('Google',$services)) {
-				#$this->enabled = true; ##FIXME
+				//$this->enabled = true;
 				$this->service = 'Google';
 			} 
 			if (isset($this->tilewidth[$this->service])) {
@@ -399,7 +399,6 @@ class RasterMap
 			}
 			$str .= "</div>";
 			
-			
 			$str .= "</div>";
 
 	//map switcher
@@ -446,33 +445,15 @@ class RasterMap
 		}
 	}
 
-	function getMeriBlock($long,$lat1,$lat2,$op=1) {
-		return "			var polyline = new GPolyline([
-				new GLatLng($lat1,$long),
-				new GLatLng($lat2,$long)
-			], \"#FF0000\", 1, $op);
-			map.addOverlay(polyline);\n";
-	}
-
-	function getPolyLineBlock(&$conv,$e1,$n1,$e2,$n2,$op=1) {
+	function getPolyLineBlock(&$conv,$e1,$n1,$e2,$n2) {
 		list($lat1,$long1) = $conv->national_to_wgs84($e1,$n1,$this->reference_index);
 		list($lat2,$long2) = $conv->national_to_wgs84($e2,$n2,$this->reference_index);
 		return "			var polyline = new GPolyline([
 				new GLatLng($lat1,$long1),
 				new GLatLng($lat2,$long2)
-			], \"#0000FF\", 1, $op);
+			], \"#0000FF\", 1);
 			map.addOverlay(polyline);\n";
 	}
-
-#	function getPolyLineBlock(&$conv,$e1,$n1,$e2,$n2) {
-#		list($lat1,$long1) = $conv->national_to_wgs84($e1,$n1,$this->reference_index);
-#		list($lat2,$long2) = $conv->national_to_wgs84($e2,$n2,$this->reference_index);
-#		return "			var polyline = new GPolyline([
-#				new GLatLng($lat1,$long1),
-#				new GLatLng($lat2,$long2)
-#			], \"#0000FF\", 1);
-#			map.addOverlay(polyline);\n";
-#	}
 	
 	function getPolySquareBlock(&$conv,$e1,$n1,$e2,$n2) {
 		list($lat1,$long1) = $conv->national_to_wgs84($e1,$n1,$this->reference_index);
@@ -547,48 +528,27 @@ class RasterMap
 					map.addOverlay(createMarker(point2));\n";
 			}
 			if ($this->issubmit) {
-				$zoom=13;
-			} else {
-				$zoom=14;
-			}
-			if ($this->issubmit) {
 				$block .= $this->getPolySquareBlock($conv,$e-800,$n-600,$e-200,$n-100);
-			}
-			if ($this->issubmit) {
-				for ($i=100; $i<=900; $i+=100) {
-					$block .= $this->getPolyLineBlock($conv,$e,   $n+$i,$e+1000,$n+$i,   0.25);
-					$block .= $this->getPolyLineBlock($conv,$e+$i,$n,   $e+$i,  $n+1000, 0.25);
-				}
 			}
 			if (empty($this->lat)) {
 				list($this->lat,$this->long) = $conv->national_to_wgs84($this->nateastings,$this->natnorthings,$this->reference_index);
-			}
-			if ($CONF['showmeridian'] != 0) {
-				list($centlat,$centlong) = $conv->national_to_wgs84($e+500,$n+500,$this->reference_index);
-				$merilong = round($centlong/$CONF['showmeridian']) * $CONF['showmeridian'];
-				$meridist = deg2rad(abs($centlong-$merilong)) * cos(deg2rad($centlat)) * 6371;
-				if ($meridist < 3) { # only show meridian if closer than 3 km to center of square
-					$deltalat = rad2deg(3.0/6371); # show approx 2*3km
-					$block .= $this->getMeriBlock($merilong,$centlat-$deltalat,$centlat+$deltalat);
-				}
 			}
 			if ($this->issubmit) {
 				$p1 = "<script type=\"text/javascript\" src=\"".smarty_modifier_revision("/mapper/geotools2.js")."\"></script>";
 			} else {
 				$p1 = '';
 			}
-			#	<style type=\"text/css\">
-			#	v\:* {
-			#		behavior:url(#default#VML);
-			#	}
-			#	</style>
 			return "
+				<style type=\"text/css\">
+				v\:* {
+					behavior:url(#default#VML);
+				}
+				</style>
 				$p1
 				<script type=\"text/javascript\" src=\"".smarty_modifier_revision("/mappingG.js")."\"></script>
 				<script type=\"text/javascript\">
 				//<![CDATA[
 					var issubmit = {$this->issubmit}+0;
-					var ri = {$this->reference_index};
 					var map = null;
 					function loadmap() {
 						if (GBrowserIsCompatible()) {
@@ -598,9 +558,7 @@ class RasterMap
 							map.addControl(new GMapTypeControl(true));
 							//map.disableDragging();
 							var point = new GLatLng({$this->lat},{$this->long});
-							//map.setCenter(point, 13, G_PHYSICAL_MAP);
-							map.setCenter(point, $zoom, G_HYBRID_MAP);
-							//map.setCenter(point, $zoom, G_SATELLITE_MAP);
+							map.setCenter(point, 13, G_PHYSICAL_MAP);
 							$block 
 							
 							AttachEvent(window,'unload',GUnload,false);
@@ -660,10 +618,28 @@ class RasterMap
 			return "<span id=\"mapFootNoteOS50k\"".(($this->service == 'OS50k' && $this->issubmit)?'':' style="display:none"')."><br/>Centre the blue circle on the subject and mark the photographer position with the black circle. <b style=\"color:red\">The circle centre marks the spot.</b> The red arrow will then show view direction.</span>".
 			"<span id=\"mapFootNoteVoB\"".($this->service == 'VoB'?'':' style="display:none"')."><br/>Historical Map provided by <a href=\"http://www.visionofbritain.org.uk/\" title=\"Vision of Britain\">VisionOfBritain.org.uk</a></span>";
 		} elseif ($this->service == 'OS50k') {
+			$str = '';
+			if (empty($this->service2)) {
+				$token=new Token;
+
+				foreach ($this as $key => $value) {
+					if (is_scalar($value)) {
+						$token->setValue($key, $value);
+					}
+				}
+				$token->setValue("service",'Google');
+				$token = $token->getToken();
+				
+				$width = $this->width;
+				$iframe = rawurlencode("<iframe src=\"/map_frame.php?t=$token\" id=\"map\" width=\"{$width}\" height=\"{$width}\" scrolling=\"no\">Loading map...</iframe>");
+
+				$str = "<br><a href=\"#\" onclick=\"document.getElementById('rastermap').innerHTML = rawurldecode('$iframe'); if (document.getElementById('mapFootNoteOS50k')) { document.getElementById('mapFootNoteOS50k').style.display = 'none';} return false;\">Change to interactive Map &gt;</a>";
+			}
+		
 			if (!empty($this->clickable)) {
-				return "<span id=\"mapFootNoteOS50k\">TIP: Click the map to open OS Get-a-Map</span><span id=\"mapFootNoteVoB\"></span>";
+				return "<span id=\"mapFootNoteOS50k\">TIP: Click the map to open OS Get-a-Map$str</span><span id=\"mapFootNoteVoB\"></span>";
 			} else {
-				return "<span id=\"mapFootNoteOS50k\"".(($this->displayMarker1 || $this->displayMarker2)?'':' style="display:none"').">TIP: Hover over the icons to hide</span><span id=\"mapFootNoteVoB\"></span>";
+				return "<span id=\"mapFootNoteOS50k\"".(($this->displayMarker1 || $this->displayMarker2)?'':' style="display:none"').">TIP: Hover over the icons to hide$str</span><span id=\"mapFootNoteVoB\"></span>";
 			}
 		}
 	}

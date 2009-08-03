@@ -46,13 +46,13 @@ function add_topic_to_content($topic_id,& $db) {
 	
 	$gridimage_ids = array();
 	
-	if ($topic['forum_id'] == $CONF['forum_submittedarticles'] || $topic['forum_id'] == $CONF['forum_gallery']) {//todo gsd
+	if ($topic['forum_id'] == 6 || $topic['forum_id'] == 11) {//todo gsd
 		$updates = array();
 		$updates[] = "`foreign_id` = {$topic_id}";
 		switch($topic['forum_id']) {
-			case $CONF['forum_gridsquare']: $updates[] = "`source` = 'gsd'"; break;
-			case $CONF['forum_submittedarticles']: $updates[] = "`source` = 'themed'"; break;
-			case $CONF['forum_gallery']: $updates[] = "`source` = 'gallery'"; break;
+			case 5: $updates[] = "`source` = 'gsd'"; break;
+			case 6: $updates[] = "`source` = 'themed'"; break;
+			case 11: $updates[] = "`source` = 'gallery'"; break;
 		} 
 		
 		$content_id = $db->getOne("SELECT content_id FROM content WHERE ".implode(' AND ',$updates));
@@ -60,7 +60,7 @@ function add_topic_to_content($topic_id,& $db) {
 		$updates[] = "`title` = ".$db->Quote($topic['topic_title']);
 
 		$url = trim(strtolower(preg_replace('/[^\w]+/','_',html_entity_decode(preg_replace('/&#\d+;?/','_',$topic['topic_title'])))),'_').'_'.$topic_id;
-		if ($topic['forum_id'] == $CONF['forum_gallery']) {
+		if ($topic['forum_id'] == 11) {
 			$updates[] = "`url` = ".$db->Quote("/gallery/".$url);
 		} else {
 			$updates[] = "`url` = ".$db->Quote("/discuss/?action=vthread&amp;forum={$topic['forum_id']}&amp;topic={$topic_id}");
@@ -75,7 +75,7 @@ function add_topic_to_content($topic_id,& $db) {
 		$content = $posts['post_text'];
 		$content = str_replace("\r",'',$content);
 
-		$content = preg_replace('/\[\[(\[?)(\w{0,3} ?\d+ ?\d*)(\]?)\]\]/e',"add_image_to_list('\$2','\$2')",$content);
+		$content = preg_replace('/\[\[(\[?)(\w{0,2} ?\d+ ?\d*)(\]?)\]\]/e',"add_image_to_list('\$2','\$2')",$content);
 
 		$content = strip_tags($content);
 

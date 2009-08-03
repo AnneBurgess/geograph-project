@@ -73,7 +73,7 @@ class GridShader
 	/**
 	* adds or updates squares
 	*/
-	function process($imgfile, $x_offset, $y_offset, $reference_index, $clearexisting,$updategridprefix = true,$expiremaps=true,$ignore100=false,$dryrun=false)
+	function process($imgfile, $x_offset, $y_offset, $reference_index, $clearexisting,$updategridprefix = true,$expiremaps=true,$ignore100=false)
 	{
 		if (file_exists($imgfile))
 		{
@@ -89,16 +89,7 @@ class GridShader
 				
 
 				$this->_trace("Image is {$imgw}km x {$imgh}km");
-				if ($dryrun) $this->_trace("DRY RUN!");
 
-				$valid=0;
-				$invalid=0;
-				$vminx=0;
-				$vmaxx=0;
-				$vminy=0;
-				$vmaxy=0;
-				$invalx=0;
-				$invaly=0;
 				$created=0;
 				$updated=0;
 				$untouched=0;
@@ -139,63 +130,47 @@ class GridShader
 						
 						$gridref=$this->_getGridRef($gridx,$gridy,$reference_index);
 
-						if (empty($gridref)) {
-							if ($clearexisting || ($percent_land!=0)) {
-								if ($invalid == 0) {
-									$invalx = $gridx;
-									$invaly = $gridy;
-								}
-								$invalid++;
-							}
-						} else {
-							if ($valid == 0 || $gridx > $vmaxx) $vmaxx = $gridx;
-							if ($valid == 0 || $gridy > $vmaxy) $vmaxy = $gridy;
-							if ($valid == 0 || $gridx < $vminx) $vminx = $gridx;
-							if ($valid == 0 || $gridy < $vminy) $vminy = $gridy;
-							$valid++;
-
-							//$this->_trace("img($imgx,$imgy) = grid($gridx,$gridy) $percent_land%");
-							
-							//ok, that's everything we need - can we obtain an existing grid square
-							$square = $this->db->GetRow("select gridsquare_id,percent_land from gridsquare where x='$gridx' and y='$gridy'");	
-						##no need to check this as this is the first import (and its rather expensive!)	
-							
-							if (is_array($square) && count($square))
+						//$this->_trace("img($imgx,$imgy) = grid($gridx,$gridy) $percent_land%");
+						
+						//ok, that's everything we need - can we obtain an existing grid square
+						$square = $this->db->GetRow("select gridsquare_id,percent_land from gridsquare where x='$gridx' and y='$gridy'");	
+					##no need to check this as this is the first import (and its rather expensive!)	
+						
+						if (is_array($square) && count($square))
+						{
+							if (($square['percent_land']!=$percent_land) &&
+							    ($clearexisting || ($percent_land!=0)))
 							{
-								if (($square['percent_land']!=$percent_land) &&
-								    ($clearexisting || ($percent_land!=0)))
-								{
-									
-									$sql="update gridsquare set grid_reference='{$gridref}', ".
-										"reference_index='$reference_index', ".
-										"percent_land='$percent_land' ".
-										"where gridsquare_id={$square['gridsquare_id']}";
-									if (!$dryrun) $this->db->Execute($sql);
-									if ($percent_land==0)
-										$zeroed++;
-									else
-										$updated++;
-								}
+								
+								$sql="update gridsquare set grid_reference='{$gridref}', ".
+									"reference_index='$reference_index', ".
+									"percent_land='$percent_land' ".
+									"where gridsquare_id={$square['gridsquare_id']}";
+								$this->db->Execute($sql);
+								if ($percent_land==0)
+									$zeroed++;
 								else
-								{
-									$untouched++;
-								}
+									$updated++;
 							}
 							else
 							{
-								//we only create squares for land
-								if ($percent_land>0)
-								{
-									$sql="insert into gridsquare (grid_reference,reference_index,x,y,percent_land,point_xy) ".
-										"values('{$gridref}','{$reference_index}',$gridx,$gridy,$percent_land,GeomFromText('POINT($gridx $gridy)'))";
-									if (!$dryrun) $this->db->Execute($sql);
+								$untouched++;
+							}
+						}
+						else
+						{
+							//we only create squares for land
+							if ($percent_land>0)
+							{
+								$sql="insert into gridsquare (grid_reference,reference_index,x,y,percent_land,point_xy) ".
+									"values('{$gridref}','{$reference_index}',$gridx,$gridy,$percent_land,GeomFromText('POINT($gridx $gridy)'))";
+								$this->db->Execute($sql);
 
-									$created++;
-								}
-								else
-								{
-									$skipped++;
-								}
+								$created++;
+							}
+							else
+							{
+								$skipped++;
 							}
 						}
 						
@@ -225,7 +200,7 @@ class GridShader
 
 						//$this->_trace("{$prefix['prefix']} $minx,$miny to $maxx,$maxy has $count");
 
-						if (!$dryrun) $this->db->query("update gridprefix set landcount=$count where ".
+						$this->db->query("update gridprefix set landcount=$count where ".
 							"reference_index={$prefix['reference_index']} and ".
 							"prefix='{$prefix['prefix']}'");
 					}
@@ -240,16 +215,6 @@ class GridShader
 				
 				$this->_trace("$untouched squares examined but left untouched");
 				$this->_trace("$skipped squares were all water and not created");
-				if ($valid == 0) {
-					$this->_trace("0 valid pixels");
-				} else {
-					$this->_trace("$valid valid pixels: $vminx, $vminy  ...  $vmaxx, $vmaxy");
-				}
-				if ($invalid == 0) {
-					$this->_trace("0 invalid pixels");
-				} else {
-					$this->_trace("$invalid invalid pixels; first: $invalx, $invaly");
-				}
 
 				
 				
@@ -299,7 +264,7 @@ class GridShader
 							$sql="update mapcache set age=age+1 
 								where $gridx between map_x and (map_x+image_w/pixels_per_km-1) and 
 								$gridy between map_y and (map_y+image_h/pixels_per_km-1) $and_crit";
-							if (!$dryrun) $this->db->Execute($sql);
+							$this->db->Execute($sql);
 						}
 				
 					}

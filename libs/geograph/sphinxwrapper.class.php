@@ -75,7 +75,7 @@ class sphinxwrapper {
 		$q = preg_replace('/(^|\s)\b\'([\w ]+)\'\b(\s|$)/','$1"$2"$3',$q);
 		
 			//transform 'near gridref' to the put the GR first (thats how processQuery expects it) 
-		$q = preg_replace('/^(.*) *near +([a-zA-Z]{1,3} *\d{2,5} *\d{2,5}) *$/','$2 $1',$q);
+		$q = preg_replace('/^(.*) *near +([a-zA-Z]{1,2} *\d{2,5} *\d{2,5}) *$/','$2 $1',$q);
 		
 		$this->q = $q;
 	}
@@ -83,7 +83,7 @@ class sphinxwrapper {
 	public function processQuery() {
 		$q = $this->q;
 
-		if (preg_match('/^([a-zA-Z]{1,3}) +(\d{1,5})(\.\d*|) +(\d{1,5})(\.*\d*|)/',$q,$matches) && $matches[1] != 'tp') {
+		if (preg_match('/^([a-zA-Z]{1,2}) +(\d{1,5})(\.\d*|) +(\d{1,5})(\.*\d*|)/',$q,$matches) && $matches[1] != 'tp') {
 			$square=new GridSquare;
 			$grid_ok=$square->setByFullGridRef($matches[0],true);
 
@@ -96,7 +96,7 @@ class sphinxwrapper {
 				$r = "\t--invalid Grid Ref--";
 			}
 
-		} else if (preg_match('/^([a-zA-Z]{1,3})(\d{2,10})\b/',$q,$matches) && $matches[1] != 'tp') {
+		} else if (preg_match('/^([a-zA-Z]{1,2})(\d{2,10})\b/',$q,$matches) && $matches[1] != 'tp') {
 
 			$square=new GridSquare;
 			$grid_ok=$square->setByFullGridRef($matches[0],true);
@@ -150,45 +150,107 @@ class sphinxwrapper {
 	public function setSpatial($data) {
 		require_once('geograph/conversions.class.php');
 		$conv = new Conversions;
-
-		list($e,$n,$reference_index) = $conv->internal_to_national($data['x'],$data['y'],0);
-
-		$e = floor($e/1000);
-		$n = floor($n/1000);
+		
 		$grs = array();
+		
+		if (!empty($data['bbox'])) {
+			list($e1,$n1,$ri1,$e2,$n2,$ri2) = $data['bbox'];
+			
+			$span = max($e2-$e1,$n2-$n1);
+			//todo-decide-o-area?
+			if ($span > 250000) { //100k ie 1 myriad
+				$mod = 100000;
+				$grlen = -1;
+			} elseif ($span > 25000) { //10k ie 1 hectad
+				$mod = 10000;
+				$grlen = 2;
+			} else {
+				$mod = 1000;
+				$grlen = 4;
+			}
+			
+			if ($e1 == $e2 && $n1 == $n2) {
+				$e2 = $e1 = floor($e1 / 1000) * 1000;
+				$n2 = $n1 = floor($n1 / 1000) * 1000;
+			} else {
+				$e1 = floor($e1 / 1000) * 1000;
+				$e2 =  ceil($e2 / 1000) * 1000;
 
-		list($gr2,$len) = $conv->national_to_gridref($e*1000,$n*1000,4,$reference_index,false);
-
-		if ($data['d'] == 1) {
-			$this->filters['grid_reference'] = $gr2;
-		} elseif ($data['d'] < 10) {
-			#$grs[] = $gr2;
-			for($x=$e-$data['d'];$x<=$e+$data['d'];$x++) {
-				for($y=$n-$data['d'];$y<=$n+$data['d'];$y++) {
-					list($gr2,$len) = $conv->national_to_gridref($x*1000,$y*1000,4,$reference_index,false);
-					$grs[] = $gr2;
+				$n1 = floor($n1 / 1000) * 1000;
+				$n2 =  ceil($n2 / 1000) * 1000;
+			}
+			
+			//probably a better way to do this?
+			for ($ee = $e1;$ee <= $e2;$ee+=1000) {
+				if ($ee%$mod == 0) {
+					for ($nn = $n1;$nn <= $n2;$nn+=1000) {
+						if ($nn%$mod == 0) {
+							
+							list($gr2,$len) = $conv->national_to_gridref($ee,$nn,$grlen,$ri1,false);
+							$grs[] = $gr2;
+						}
+					}
 				}
 			}
-			$this->filters['grid_reference'] = "(".join(" | ",$grs).")";
-		} else {
-			#$this->filters['grid_reference'] = $gr2;
-			$d = intval($data['d']/10)*10;
-			for($x=$e-$d;$x<=$e+$d;$x+=10) {
-				for($y=$n-$d;$y<=$n+$d;$y+=10) {
-					list($gr2,$len) = $conv->national_to_gridref($x*1000,$y*1000,2,$reference_index,false);
-					$grs[] = $gr2;
-				}
+			
+			if (count($grs) > 100) {
+				//if we have that many it really doesnt matter if we miss a few!
+				shuffle($grs);
+				$grs = array_slice($grs,0,100);
 			}
-			$this->filters['hectad'] = "(".join(" | ",$grs).")";
-		}
-
-		if ($data['d'] > 1) {
-			list($lat,$long) = $conv->national_to_wgs84($e*1000+500,$n*1000+500,$reference_index);
-			$cl = $this->_getClient();
-			$cl->SetGeoAnchor('wgs84_lat', 'wgs84_long', deg2rad($lat), deg2rad($long) );
-			$cl->SetFilterFloatRange('@geodist', 0.0, floatval($data['d']*1000));
-		} else {
+			
+			if (count($grs) == 0) {
+				//somethig went wrong... 
+				
+			} elseif ($span > 250000) { //100k ie 1 myriad
+				$this->filters['myriad'] = "(".join(" | ",$grs).")";
+			} elseif ($span > 25000) { //10k ie 1 hectad
+				$this->filters['hectad'] = "(".join(" | ",$grs).")";
+			} else {
+				$this->filters['grid_reference'] = "(".join(" | ",$grs).")";
+			}
+			
 			$this->sort = preg_replace('/@geodist \w+,?\s*/','',$this->sort);
+			
+		} else {
+			list($e,$n,$reference_index) = $conv->internal_to_national($data['x'],$data['y'],0);
+
+			$e = floor($e/1000);
+			$n = floor($n/1000);
+
+			list($gr2,$len) = $conv->national_to_gridref($e*1000,$n*1000,4,$reference_index,false);
+
+			if ($data['d'] == 1) {
+				$this->filters['grid_reference'] = $gr2;
+			} elseif ($data['d'] < 10) {
+				#$grs[] = $gr2;
+				for($x=$e-$data['d'];$x<=$e+$data['d'];$x++) {
+					for($y=$n-$data['d'];$y<=$n+$data['d'];$y++) {
+						list($gr2,$len) = $conv->national_to_gridref($x*1000,$y*1000,4,$reference_index,false);
+						$grs[] = $gr2;
+					}
+				}
+				$this->filters['grid_reference'] = "(".join(" | ",$grs).")";
+			} else {
+				#$this->filters['grid_reference'] = $gr2;
+				$d = intval($data['d']/10)*10;
+				for($x=$e-$d;$x<=$e+$d;$x+=10) {
+					for($y=$n-$d;$y<=$n+$d;$y+=10) {
+						list($gr2,$len) = $conv->national_to_gridref($x*1000,$y*1000,2,$reference_index,false);
+						$grs[] = $gr2;
+					}
+				}
+				$this->filters['hectad'] = "(".join(" | ",$grs).")";
+			}
+
+			if ($data['d'] > 1) {
+				list($lat,$long) = $conv->national_to_wgs84($e*1000+500,$n*1000+500,$reference_index);
+				$cl = $this->_getClient();
+				$cl->SetGeoAnchor('wgs84_lat', 'wgs84_long', deg2rad($lat), deg2rad($long) );
+				$cl->SetFilterFloatRange('@geodist', 0.0, floatval($data['d']*1000));
+			} else {
+				$this->sort = preg_replace('/@geodist \w+,?\s*/','',$this->sort);
+			}
 		}
 	} 
 	

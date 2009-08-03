@@ -9,11 +9,7 @@
 <form action="/search.php" method="get" name="theForm">
 	<div class="tabHolder">
 		<a href="/search.php?form=simple" class="tab">simple search</a>
-		{if $noSphinx}
-		<a href="/search.php?form=advanced&amp;legacy=true" class="tab">advanced search</a>
-		{else}
 		<a href="/search.php?form=text" class="tab">advanced search</a>
-		{/if}
 		<span class="tabSelected">First Geographs</span>
 	</div>
 	<div class="interestBox">
@@ -28,7 +24,7 @@
 		  </tr> 
 		  <tr> 
 			 <td colspan="3" style="font-size:0.7em">Enter either<br/> A) <i>Hectad Reference</i> like <b>SH56</b>, to find images within that Hectad<a href="/help/squares">?</a><br/> B)
-			 <i>Numerical Square</i>{if $enable_forums && $forum_topic_numsquare >= 0}<a href="/discuss/index.php?action=vthread&amp;forum={$forum_generaldiscussion}&amp;topic={$forum_numsquare}">?</a>{/if} like <b>5546</b>, which matches those numbers in any Myriad or<br/> C) <i>4fig GR - Wildcard Search</i> like <b>SH6_56</b> where _ matches any digit, can also use % to match zero or more characters (useful for matching GB or Irish Grids).<br/> D) <i>Hectad - Wildcard Search</i> like <b>SH6_</b> where _ matches any digit</td> 
+			 <i>Numerical Square</i>{if $enable_forums}<a href="/discuss/index.php?action=vthread&amp;forum=2&amp;topic=1235">?</a>{/if} like <b>5546</b>, which matches those numbers in any Myriad or<br/> C) <i>4fig GR - Wildcard Search</i> like <b>SH6_56</b> where _ matches any digit, can also use % to match zero or more characters (useful for matching GB or Irish Grids).<br/> D) <i>Hectad - Wildcard Search</i> like <b>SH6_</b> where _ matches any digit</td> 
 		  </tr> 
 		  <tr> 
 			 <td colspan="3">&nbsp;</td> 
@@ -53,12 +49,7 @@
 				{/if}
 				{/dynamic}
 				<input type="checkbox" name="user_invert_ind" id="user_invert_ind" {$user_invert_checked}/> <label for="user_invert_ind">exclude this contributor</label><br/>
-				{if $noSphinx}
-				<small>({newwin href="/statistics/breakdown.php?by=user" onclick="window.open(this.href,this.target); return false;" text="open contributor list"})</small>
-				{else}
-				<small>({newwin href="/finder/contributors.php?popup" onclick="window.open(this.href,this.target); return false;" text="open Contributor Search screen"})</small>
-				{/if}
-			</td>
+				<small>({newwin href="/finder/contributors.php?popup" onclick="window.open(this.href,this.target); return false;" text="open Contributor Search screen"})</small></td> 
 		  </tr> 
 		  <tr> 
 			 <td><label for="moderation_status">classification</label></td> 

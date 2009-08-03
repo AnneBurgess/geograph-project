@@ -4,8 +4,22 @@
         {assign var="page_title" value="Map Browsing :: British Isles"}
 {/if}
 {assign var="meta_description" value="Geograph coverage map of the British Isles, showing where we have photos, green squares are yet to be photographed."}
-{assign var="extra_meta" value="<meta name=\"robots\" content=\"noindex, nofollow\"/>"}
 {include file="_std_begin.tpl"}
+<meta name="robots" content="noindex, nofollow"/>
+{literal}<style type="text/css">
+table.navtable {
+	margin-top:5px; line-height:0px
+}
+.navtable img, .navtable a {
+	display:block;
+}
+.navtable td.textcell {
+	background:#6476fc; font-size:0.8em; text-align:center;
+}
+.navtable td.textcell a {
+	display: inline;
+}
+</style>{/literal}
  
     
  
@@ -41,7 +55,7 @@
 			<map name="map_{$x}_{$y}" id="map_{$x}_{$y}">
 			{foreach from=$mapmap key=gx item=gridrow}
 				{foreach from=$gridrow key=gy item=gridcell}
-					<area shape="rect" coords="{$gx*$mapcell->pixels_per_km},{$gy*$mapcell->pixels_per_km},{$gx*$mapcell->pixels_per_km+$mapcell->pixels_per_km},{$gy*$mapcell->pixels_per_km+$mapcell->pixels_per_km}" {if $gridcell.gridimage_id}{if $gridcell.imagecount > 1}href="/gridref/{$gridcell.grid_reference}"{else}href="/photo/{$gridcell.gridimage_id}"{/if} title="{$gridcell.grid_reference} : {$gridcell.title|escape:'html'} by {$gridcell.realname|escape:'html'} {if $gridcell.imagecount > 1}&#13;&#10;({$gridcell.imagecount} images in this square){/if}" alt="{$gridcell.grid_reference} : {$gridcell.title|escape:'html'} by {$gridcell.realname|escape:'html'} {if $gridcell.imagecount > 1}&#13;&#10;({$gridcell.imagecount} images in this square){/if}"{else} href="/gridref/{$gridcell.grid_reference}" alt="{$gridcell.grid_reference}" title="{$gridcell.grid_reference}"{/if}/>
+					<area shape="rect" coords="{$gx*$mapcell->pixels_per_km},{$gy*$mapcell->pixels_per_km},{$gx*$mapcell->pixels_per_km+$mapcell->pixels_per_km},{$gy*$mapcell->pixels_per_km+$mapcell->pixels_per_km}" {if $gridcell.gridimage_id}{if $gridcell.imagecount > 1}href="/gridref/{$gridcell.grid_reference}{if $user_id}?user={$user_id}{/if}"{else}href="/photo/{$gridcell.gridimage_id}"{/if} title="{$gridcell.grid_reference} : {$gridcell.title|escape:'html'} by {$gridcell.realname|escape:'html'} {if $gridcell.imagecount > 1}&#13;&#10;({$gridcell.imagecount} images in this square){/if}"{else} href="/gridref/{$gridcell.grid_reference}" alt="{$gridcell.grid_reference}" title="{$gridcell.grid_reference}"{/if}/>
 				{/foreach}
 			{/foreach}
 			</map>
@@ -316,7 +330,7 @@ south_F2 = new Image(30,29); south_F2.src = "/templates/basic/mapnav/south_F2.gi
 
 <ul>
 {if !$token_zoomin}
-<li>Hover over an image for a description. Also right-click "open in new window"/tab should function at this scale.</li>
+<li>Hover over an image for a description.</li>
 {/if}
 <li>Click on the large map to zoom in on an area of interest. You can also use the +
 and - buttons to zoom in and out, or the keyboard shortcuts Alt+Q to zoom out and Alt+S to zoom in</li>
@@ -324,10 +338,9 @@ and - buttons to zoom in and out, or the keyboard shortcuts Alt+Q to zoom out an
 You can also use the keyboard shortcuts Alt+W, Alt+D, Alt+X and Alt+A to pan the map</li>
 <li>You can also pan the map by clicking the smaller overview map</li>
 <li>Use the tabs under the map to change map style</li>
-<li>The "Link to this Map" creates a nice accessible link to this map- which is tidier than many taken direct from the address bar.</li>
-{if $token_zoomin}
-	<li>NOTE: "open in new window"/tab does NOT function with this map correctly</li>
-{/if}
+<li>The "Link to this Map" creates a nice accessible link to this map - which is tidier than many taken direct from the address bar.</li>
+<li>NOTE: "open in new window"/tab does NOT function well with this map</li>
+
 </ul>
 
 

@@ -28,7 +28,7 @@ $smarty = new GeographPage;
 
 $by = (isset($_GET['by']) && preg_match('/^\w+$/' , $_GET['by']))?$_GET['by']:'myriad';
 
-$ri = (isset($_GET['ri']) && is_numeric($_GET['ri']))&& array_key_exists(intval($_GET['ri']), $CONF['references_all']) ?intval($_GET['ri']):0;
+$ri = (isset($_GET['ri']) && is_numeric($_GET['ri']))?intval($_GET['ri']):0;
 
 $u = (isset($_GET['u']) && is_numeric($_GET['u']))?intval($_GET['u']):0;
 
@@ -100,15 +100,15 @@ if (!$smarty->is_cached($template, $cacheid))
 		$by = 'myriad';
 		$smarty->assign('linkprefix', "/search.php?".($u?"u=$u&amp;":'')."gridsquare=");
 		if ($ri) {
-			$letterlength = $CONF['gridpreflen'][$ri];
+			$letterlength = 3 - $ri; #should this be auto-realised by selecting a item from gridprefix?
 			$sql_group = $sql_fieldname = "SUBSTRING(gi.grid_reference,1,$letterlength)";
 		} else {
-			$sql_group = $sql_fieldname = "SUBSTRING(gi.grid_reference,1,length(gi.grid_reference)-4)";
+			$sql_group = $sql_fieldname = "SUBSTRING(gi.grid_reference,1,3 - reference_index)";
 		}
 	} else if ($by == 'hectad') {
 		$smarty->assign('linkprefix', "/search.php?".($u?"u=$u&amp;":'')."first=");
 		if ($ri) {
-			$letterlength = $CONF['gridpreflen'][$ri];
+			$letterlength = 3 - $ri; #should this be auto-realised by selecting a item from gridprefix?
 			$ll1 = $letterlength+1;
 			$ll3 = $letterlength+3;
 			$sql_group = $sql_fieldname = "concat(substring(gi.grid_reference,1,$ll1),substring(gi.grid_reference,$ll3,1))";

@@ -55,7 +55,7 @@ if (!$smarty->is_cached($template, $cacheid))
 		default: $preset = 'overview_large'; break;
 	}
 	$overview=new GeographMapMosaic($preset);
-	$overview->type_or_user = 0;
+	$overview->type_or_user = -1;
 	if ($preset == 'overview_large') {
 		$overview->assignToSmarty($smarty, 'overview2');
 	} else {
@@ -92,7 +92,7 @@ if (!$smarty->is_cached($template, $cacheid))
 			inner join user as u on (p.poster_id=u.user_id)
 			where find_in_set('admin',u.rights)>0 and
 			abs(unix_timestamp(t.topic_time) - unix_timestamp(p.post_time) ) < 10 and
-			t.forum_id={$CONF['forum_announce']}
+			t.forum_id=1
 			order by t.topic_time desc limit 3";
 		$news=$db->GetAll($sql);
 		if ($news) 
@@ -115,10 +115,10 @@ if (!$smarty->is_cached($template, $cacheid))
 	$stats += $db->GetRow("select count(*)-1 as users from user_stat");
 	$stats += $db->cacheGetRow(3600,"select count(*) as total,sum(imagecount in (1,2,3)) as fewphotos from gridsquare where percent_land > 0");
 	$stats['nophotos'] = $stats['total'] - $stats['squares'];
-	$stats['percentage'] = sprintf("%.2f",$stats['squares']/$stats['total']*100);
+	$stats['percentage'] = sprintf("%.1f",$stats['squares']/$stats['total']*100);
 	$smarty->assign_by_ref('stats', $stats);
 	
-	$smarty->assign('rss_url','/discuss/syndicator.php?forum='.$CONF['forum_announce'].'&amp;first=1');
+	$smarty->assign('rss_url','/discuss/syndicator.php?forum=1&amp;first=1');
 	
 	$smarty->assign('messages', array(
 		0=>'click map to zoom in',

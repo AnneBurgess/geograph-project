@@ -4,6 +4,12 @@ This file is part of miniBB. miniBB is free discussion forums/message board soft
 */
 if (!defined('INCLUDED776')) die ('Fatal error.');
 
+	header("HTTP/1.1 503 Service Unavailable");
+	$smarty = new GeographPage;
+	$smarty->display('function_disabled.tpl');
+	exit;
+
+
 if(isset($_GET['searchWhere'])) $searchWhere=$_GET['searchWhere'];
 elseif(isset($_POST['searchWhere'])) $searchWhere=$_POST['searchWhere'];
 else $searchWhere=0;
@@ -24,7 +30,7 @@ elseif(isset($_POST['eMatch'])) $eMatch=$_POST['eMatch'];
 elseif(isset($_GET['exact'])) $exact=$_GET['exact'];
 
 if ((preg_match("/^([A-Z]{1,2})([0-9]{1,2}[A-Z]?) *([0-9])([A-Z]{0,2})$/",strtoupper($searchFor)) || preg_match("/^([a-zA-Z]{1,2}) ?(\d{2,5})[ \.]?(\d{2,5})$/",$searchFor) ) 
-	&& ($searchForum==0 || $searchForum==$CONF['forum_gridsquare'])) {
+	&& ($searchForum==0 || $searchForum==5)) {
 	header("Location:http://{$_SERVER['HTTP_HOST']}/discuss/search.php?q={$searchFor}");
 	print "<a href=\"http://{$_SERVER['HTTP_HOST']}/discuss/search.php?q={$searchFor}\">View Search Results</a>";
 	exit;

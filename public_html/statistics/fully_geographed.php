@@ -34,8 +34,6 @@ $cacheid='statistics|fully_geographed';
 $smarty->caching = 2; // lifetime is per cache
 $smarty->cache_lifetime = 3600*6; //6hr cache
 
-$smarty->assign_by_ref('references_real',$CONF['references']);
-
 if (!$smarty->is_cached($template, $cacheid))
 {
 	$db=NewADOConnection($GLOBALS['DSN']);
@@ -61,10 +59,8 @@ if (!$smarty->is_cached($template, $cacheid))
 
 	$db->Execute("TRUNCATE hectad_complete");
 
-	$mostarray = array();
-
-	foreach ($CONF['references'] as $ri => $rname) {
-		$letterlength = $CONF['gridpreflen'][$ri];
+	foreach (array(1,2) as $ri) {
+		$letterlength = 3 - $ri; #should this be auto-realised by selecting a item from gridprefix?
 		
 		$prev_fetch_mode = $ADODB_FETCH_MODE;
 		$ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;	
@@ -126,10 +122,8 @@ if (!$smarty->is_cached($template, $cacheid))
 		
 		uasort($most,"cmp");
 		
-		$mostarray += array($ri => $most);
+		$smarty->assign("most$ri", $most);
 	}
-
-	$smarty->assign_by_ref("most", $mostarray);
 
 	$db->Execute("ALTER TABLE `hectad_complete` ORDER BY `completed` DESC");
 

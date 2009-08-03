@@ -1,4 +1,4 @@
-<?php
+<?
 /*
 This file is part of miniBB. miniBB is free discussion forums/message board software, without any warranty. See COPYING file for more details. Copyright (C) 2004 Paul Puzyrev, Sergei Larionov. www.minibb.net
 */
@@ -30,13 +30,13 @@ $GLOBALS['http_host'] = $_SERVER['HTTP_HOST'];
 
 $bb_admin='bb_admin.php?';
 
-$lang=$CONF['forum_lang'];
+$lang='eng';
 $skin='default';
 $main_url='http://'.$_SERVER['HTTP_HOST'].'/discuss';
-$sitename=$CONF['forum_title'];
+$sitename='Discuss';
 $emailadmin=0;
 $emailusers=1;
-$userRegName="-'\\w\\s";
+$userRegName='_A-Za-z0-9 ';
 $l_sepr='<span style="color:#006699">&nbsp;-&nbsp;</span>';
 
 $post_text_maxlength=32640;
@@ -54,7 +54,7 @@ $protectWholeForumPwd='pwd';
 
 $postRange=20;
 
-$dateFormat=$CONF['forum_date'];
+$dateFormat='j F Y H:i:s';
 
 $cookiedomain='';
 $cookiename='geographbb';
@@ -121,7 +121,6 @@ $indexphp='index.php?';
 $useSessions=true;
 $usersEditTopicTitle=true;
 $pathToFiles='./';
-$templateDir=$CONF['forum_templates'];
 //$includeHeader='header.php';
 //$includeFooter='footer.php';
 //$emptySubscribe=TRUE;

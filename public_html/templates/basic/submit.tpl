@@ -51,11 +51,12 @@ geographing</a> first.</p>
 	
 <div style="position:relative;">
 	<div class="tabHolder">
-		<a class="tab{if $tab == 1}Selected{/if} nowrap" id="tab1" onclick="tabClick('tab','div',1,5)">Enter Grid Reference</a>
-		<a class="tab{if $tab == 2}Selected{/if} nowrap" id="tab2" onclick="tabClick('tab','div',2,5)">Choose Square</a>
-		<a class="tab{if $tab == 3}Selected{/if} nowrap" id="tab3" onclick="tabClick('tab','div',3,5)">Tagged Image</a>
-		<a class="tab{if $tab == 4}Selected{/if} nowrap" id="tab4" onclick="tabClick('tab','div',4,5); if (!document.getElementById('innerFrame4').src) document.getElementById('innerFrame4').src = '/submitmap.php?inner'">Map/Placename</a>
-		<a class="tab{if $tab == 5}Selected{/if} nowrap" id="tab5" onclick="tabClick('tab','div',5,5)">Application<sup style="color:red">New!</sup></a>
+		<a class="tab{if $tab == 1}Selected{/if} nowrap" id="tab1" onclick="tabClick('tab','div',1,6)">Enter Grid Reference</a>
+		<a class="tab{if $tab == 2}Selected{/if} nowrap" id="tab2" onclick="tabClick('tab','div',2,6)">Choose Square</a>
+		<a class="tab{if $tab == 3}Selected{/if} nowrap" id="tab3" onclick="tabClick('tab','div',3,6)">Tagged Image</a>
+		<a class="tab{if $tab == 4}Selected{/if} nowrap" id="tab4" onclick="tabClick('tab','div',4,6); if (!document.getElementById('innerFrame4').src) document.getElementById('innerFrame4').src = '/submitmap.php?inner'"><b>Map</b>/Placename</a>
+		<a class="tab{if $tab == 5}Selected{/if} nowrap" id="tab5" onclick="tabClick('tab','div',5,6)">Application</a>
+		<a class="tab{if $tab == 6}Selected{/if} nowrap" id="tab6" onclick="tabClick('tab','div',6,6)">Multi-Upload<sup style="color:red;font-size:0.6em">Experimental!</sup></a>
 	</div>
 
 	<div style="position:relative;{if $tab != 1}display:none{/if}" class="interestBox" id="div1">
@@ -71,10 +72,11 @@ geographing</a> first.</p>
 		{if $grid_reference}<small><small>(<a href="javascript:void(document.getElementById('grid_reference').value = '');">clear</a>)<br/></small></small>{/if}
 		<input id="grid_reference" type="text" name="grid_reference" value="{$grid_reference|escape:'html'}" size="14"/><small class="navButtons"><small><a href="javascript:doMove('grid_reference',-1,0);">W</a></small><sup><a href="javascript:doMove('grid_reference',0,1);">N</a></sup><sub><a href="javascript:doMove('grid_reference',0,-1);">S</a></sub><small><a href="javascript:doMove('grid_reference',1,0);">E</a></small></small>
 		&nbsp;&nbsp;&nbsp;
-		<input type="submit" name="setpos" value="Next &gt;"/> {if $picnik_api_key}or <input type="submit" name="picnik" value="Upload via Picnik &gt;"/>{/if}
+		<input type="submit" name="setpos" value="Next &gt;"/> {if $picnik_api_key}<hr/><br/>or enter location above and <input type="submit" name="picnik" value="Upload via Picnik &gt;"/>
 		</p>
 		
-		{if $picnik_api_key}<p>Clicking the <i>Upload via Picnik</i> button above allows submission via an online image manipulation service that allows tweaking of the image prior to automatically transfering it to Geograph.</p>{/if}
+		<p><small>Clicking the <i>Upload via Picnik</i> button above allows submission via an online image manipulation service that allows tweaking of the image prior to automatically transferring it to Geograph.</small>
+		{/if}</p>
 	</div>		
 
 	<div style="position:relative;{if $tab != 2}display:none{/if}" class="interestBox" id="div2">
@@ -97,7 +99,10 @@ geographing</a> first.</p>
 		</select>
 		<small><sup><a href="javascript:doMove2(0,1);">N</a></sup><sub><a href="javascript:doMove2(0,-1);">S</a></sub></small>
 		&nbsp;&nbsp;&nbsp;
-		<input type="submit" name="setpos2" value="Next &gt;"/> {if $picnik_api_key}or <input type="submit" name="picnik" value="Upload via Picnik &gt;"/>{/if}
+		<input type="submit" name="setpos2" value="Next &gt;"/> {if $picnik_api_key}<hr/><br/>or select location above and <input type="submit" name="picnik" value="Upload via Picnik &gt;"/>
+		</p>
+		
+		<p><small>Clicking the <i>Upload via Picnik</i> button above allows submission via an online image manipulation service that allows tweaking of the image prior to automatically transferring it to Geograph.</small>{/if}
 		</p>
 	</div>
 
@@ -114,11 +119,6 @@ geographing</a> first.</p>
 		<li>Subject grid-reference from the name of the file (eg "<tt>photo-<b style="padding:1px">TQ435646</b>A.jpg</tt>")</li>
 		<li>Subject grid-reference in EXIF Comment tag</li>
 		</ul></div>
-		
-		<div class="interestBox" style="background-color:pink; color:black; border:2px solid red; padding:10px;">
-		<img src="http://{$static_host}/templates/basic/img/icon_alert.gif" alt="Alert" width="50" height="44" align="left" style="margin-right:10px"/>
-		 This feature is still in development. If a image fails to upload please let us know, or better still, send it as an attachment to <a href="mailto:geograph@barryhunter.co.uk">me</a> so we can try to ensure it's recognised.
-		</div>
 	</div>
 
 	<div style="position:relative;{if $tab != 4}display:none{/if}" class="interestBox" id="div4">
@@ -136,6 +136,16 @@ geographing</a> first.</p>
 		<hr/>
 		<p>Note while JUppy is an Offline Application, with which you can prepare the upload in advance of connecting; the Picasa button requires a Internet Connection to work as it integrates the interactive maps and other aids from the Geograph website.</p>
 	</div>
+	
+	<div style="position:relative;{if $tab != 6}display:none{/if}" class="interestBox" id="div6">
+		<br/><br/>{external href="http://www.nearby.org.uk/geograph/upload/" text="Open Multi-Upload form here"} (Flash Required, currently hosted on nearby.org.uk)
+		<br/><br/>
+		<div class="interestBox" style="background-color:pink; color:black; border:2px solid red; padding:10px;">
+		<img src="http://{$static_host}/templates/basic/img/icon_alert.gif" alt="Alert" width="50" height="44" align="left" style="margin-right:10px"/>
+		 This feature is still in development, and is an early but working prototype.<br/><br/> {if $enable_forums}<b>Read more about it on the <a href="http://www.geograph.org.uk/discuss/index.php?&action=vthread&forum=12&topic=10322">Discussion Forum</a></b>{/if}
+		</div>
+	</div>
+	
 </div>
 	<br/><br/><br/>
 	<p>If you are unsure of the photo location there are a number of online 
@@ -148,7 +158,7 @@ geographing</a> first.</p>
 		above.<br/><br/></li>
 		<li>{external href="http://www.multimap.com/map/browse.cgi?lat=54.5445&lon=-6.8228&scale=1000000" text="multimap.com"} now displays 1:50,000 <b>Mapping for Northern Ireland</b>. Use our handy <a href="/latlong.php">Lat/Long Convertor</a> to get the correct Grid Square for a picture.<br/><br/>
 		
-		Furthermore {external href="http://www.osni.gov.uk/mapstore" text="OSNI"} and {external href="http://www.osi.ie/" text="OSI"} now offer online mapping from their own websites. Coordinate conversion may not be easy - its porbably best to rely on visual estimation using the national grid projected on the map.
+		Furthermore {external href="http://www.osni.gov.uk/mapstore" text="OSNI"} and {external href="http://www.osi.ie/" text="OSI"} now offer online mapping from their own websites. Coordinate conversion may not be easy - its probably best to rely on visual estimation using the national grid projected on the map.
 		<br/><br/></li>
 		
 		<li><b>If you have a WGS84 latitude &amp; longitude coordinate</b>
@@ -205,12 +215,14 @@ geographing</a> first.</p>
 		<label for="jpeg"><b>JPEG Image File</b></label>
 		<input id="jpeg" name="jpeg" type="file" />
 		
-		{if $picnik_api_key}<br/>or <input type="submit" name="picnik" value="Upload Image via Picnik.com"/><span style="color:red">New!</span>{/if}
+		{if $picnik_api_key}<br/><br/>or <input type="submit" name="picnik" value="Upload Image via Picnik.com"/>{/if}
 		
 		{/if}
 		<div><small><small style="color:gray"><i>If your image is over 640 pixels in either direction, it will be resized. If you have presized please aim to have the filesize under 100kb and in anycase under 200kb, thanks!</i></small></small></div>
 		{if $error}<br /><p style="color:#990000;font-weight:bold;">{$error}</p>{/if}
 		<br />
+		<p>You might like to check you've selected the correct square<br/> by
+		viewing the Modern {getamap gridref="document.theForm.grid_reference.value" gridref2=$gridref text="OS Get-a-map&trade;"}</p>
 
 		{if $reference_index == 2} 
 		{external href="http://www.multimap.com/maps/?zoom=15&countryCode=GB&lat=`$lat`&lon=`$long`&dp=904|#map=`$lat`,`$long`|15|4&dp=925&bd=useful_information||United%20Kingdom" text="multimap.com" title="multimap includes 1:50,000 mapping for Northern Ireland" target="_blank"} includes 1:50,000 mapping for Northern Ireland.
@@ -348,8 +360,8 @@ for {$gridref} provided they are accurately located, but may not qualify as geog
 can be edited at any time) but to activate a square you need to be first to meet the
 criteria above!</p>
 
-<div class="interestBox" style="width:30em;z-index:0"><a href="/submit_popup.php?t={$reopenmaptoken|escape:'html'}" target="gmappreview" onclick="window.open(this.href,this.target,'width=650,height=500,scrollbars=yes'); return false;">Reopen Map in a popup</a><br/>
-{newwin href="/gridref/`$gridref`" text="Open `$gridref` Page"}</div>
+<div class="interestBox" style="width:30em;z-index:0"><a href="/submit_popup.php?t={$reopenmaptoken|escape:'html'}" target="gmappreview" onclick="window.open(this.href,this.target,'width=650,height=500,scrollbars=yes'); return false;">Reopen Map in a popup</a> (and view list of placenames)<br/>
+{getamap gridref=$gridref text="Open Get-a-Map"}, {newwin href="/gridref/`$gridref`" text="Open `$gridref` Page"}</div>
 
 <h3>Title and Comments</h3>
 <p>Please provide a short title for the image, and any other comments about where
@@ -370,6 +382,34 @@ to a Grid Square or another Image.<br/>For a weblink just enter directly like: <
 
 
 <h3>Further Information</h3>
+
+{if $use_autocomplete}
+
+<p><label for="imageclass"><b>Primary geographical category</b></label> {if $error.imageclass}
+	<br/><span class="formerror">{$error.imageclass}</span>
+	{/if}<br />
+	<input size="32" id="imageclass" name="imageclass" value="{$imageclass|escape:'html'}" maxlength="32" spellcheck="true"/>
+	</p>
+{literal}
+<script type="text/javascript">
+<!--
+
+AttachEvent(window,'load', function() {
+ 	var inputWord = $('imageclass');
+ 	
+    new Autocompleter.Request.JSON(inputWord, '/finder/categories.json.php', {
+        'postVar': 'q',
+        'minLength': 2,
+        maxChoices: 60
+    });
+    
+},false);
+
+//-->
+</script>
+{/literal}
+
+{else}
 
 {literal}
 <script type="text/javascript">
@@ -416,7 +456,7 @@ AttachEvent(window,'load',onChangeImageclass,false);
 	<input size="32" id="imageclassother" name="imageclassother" value="{$imageclassother|escape:'html'}" maxlength="32" spellcheck="true"/>
 	</span></p>
 	
-	
+{/if}	
 	
 	
 <p><label><b>Date photo taken</b></label> {if $error.imagetaken}
@@ -456,8 +496,17 @@ AttachEvent(window,'load',onChangeImageclass,false);
 <input type="submit" name="goback" value="&lt; Back"/>
 <input type="submit" name="next" value="Next &gt;"/></p>
 
+{if $use_autocomplete}
+	<link rel="stylesheet" type="text/css" href="{"/js/Autocompleter.css"|revision}" /> 
+
+	<script type="text/javascript" src="{"/js/mootools-1.2-core.js"|revision}"></script> 
+	<script type="text/javascript" src="{"/js/Observer.js"|revision}"></script> 
+	<script type="text/javascript" src="{"/js/Autocompleter.js"|revision}"></script> 
+	<script type="text/javascript" src="{"/js/Autocompleter.Request.js"|revision}"></script> 
+{else}
 <script type="text/javascript" src="/categories.js.php"></script>
 <script type="text/javascript" src="/categories.js.php?full=1&amp;u={$user->user_id}"></script>
+{/if}
 
 {else}
 	<input type="hidden" name="title" value="{$title|escape:'html'}"/>

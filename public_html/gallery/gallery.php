@@ -47,7 +47,7 @@ $page = $db->getRow("
 select t.topic_id,topic_title,topic_poster,topic_poster_name,topic_time,post_time,posts_count
 	from geobb_topics t
 	inner join geobb_posts on (post_id = topic_last_post_id)
-	where t.topic_id = $topic_id and t.forum_id = {$CONF['forum_gallery']}");
+	where t.topic_id = $topic_id and t.forum_id = 11");
 	
 if (count($page)) {
 	
@@ -87,6 +87,8 @@ if (count($page)) {
 		$db->Execute($sql = "insert into geobb_lastviewed set topic_id=$topic_id,user_id={$USER->user_id},last_post_id = $postID on duplicate key update last_post_id = if(last_post_id < $postID,$postID,last_post_id)");
 	}
 } else {
+	header("HTTP/1.0 404 Not Found");
+	header("Status: 404 Not Found");
 	$template = 'static_404.tpl';
 }
 

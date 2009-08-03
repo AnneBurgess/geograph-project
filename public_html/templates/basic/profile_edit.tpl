@@ -184,6 +184,7 @@
 
 	<div class="fieldnotes"><span style="color:red">Note: HTML code will be removed, 
 	however basic URLs will be autolinked.</span><br/>
+	The main profile page will only show the first 300 characters, with a link to show the full details.<br/>
 	TIP: use <span style="color:blue">[[TQ7506]]</span> or 
 	<span style="color:blue">[[5463]]</span> to link to a Grid Square or another Image.
 	</div>
@@ -228,6 +229,19 @@
 	<div class="fieldnotes">Automatically include this text in messages sent though the site. <br/>
 	(250 chars max) 
 	<input type="button" value="Use Suggested Text" onclick="this.form.message_sig.value='-- '+this.form.realname.value+' http://{$http_host}/profile/{$user->user_id}'"/></div>
+</div>
+
+
+<div class="field"> 
+	<label for="expand_about" class="nowrap">Expand Profile Pages</label>
+	
+	<select name="expand_about" id="expand_about"> 
+	<option value="0" {if $profile->expand_about == 0} selected="selected"{/if}>Show variable length preview</option>
+	<option value="1" {if $profile->expand_about == 1} selected="selected"{/if}>Always show full Expanded version</option>
+	<option value="2" {if $profile->expand_about == 2} selected="selected"{/if}>Always show short preview, with click to expand</option>
+	</select>
+	
+	<div class="fieldnotes">How the 'About Me' box displays when viewing contributor profile pages.</div>
 </div>
 
 
@@ -301,6 +315,15 @@
 	<div class="fieldnotes">Number of seconds slides are shown for.</div>  
 </div>
 
+
+<div class="field"> 
+  
+	<label for="use_autocomplete" class="nowrap">Use Auto Complete</label>
+	
+	<input {if $profile->use_autocomplete eq 1}checked{/if} type="checkbox" name="use_autocomplete" id="use_autocomplete" value="1">
+	
+	<div class="fieldnotes">Changes the category dropdown to a autocomplete text-field - EXPERIMENTAL</div>  
+</div>
 
 </fieldset>
 

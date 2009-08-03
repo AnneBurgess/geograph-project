@@ -193,7 +193,8 @@ if (!$smarty->is_cached($template, $cacheid))
 			$sql_column = "round(pow(count(*),2)/count(distinct grid_reference))";
 			$sql_having_having = "having count(*) > $minimum";
 		} else {
-			$sql_column = "round(pow(images,2)/squares";
+			$sql_table = "user_stat i";
+			$sql_column = "images, round(pow(images,2)/squares";
 			$sql_having_having = "having images > $minimum";
 		}
 		$heading = "High Depth";
@@ -201,7 +202,7 @@ if (!$smarty->is_cached($template, $cacheid))
 
 	} elseif ($type == 'myriads') {
 		if ($filtered) {
-			$sql_column = "count(distinct substring(grid_reference,1,length(grid_reference) - 4))";
+			$sql_column = "count(distinct substring(grid_reference,1,3 - reference_index))";
 		} else {
 			$sql_table = "user_stat i";
 			$sql_column = "myriads";
@@ -225,8 +226,8 @@ if (!$smarty->is_cached($template, $cacheid))
 			$sql_having_having = "having count(*) > $minimum";
 		} else {
 			$sql_table = "user_stat i";
-			$sql_column = "hectads/images";
-			$sql_having_having = "having count(*) > $minimum";
+			$sql_column = "images, hectads/images";
+			$sql_having_having = "having images > $minimum";
 		}
 		$heading = "Spread Score";
 		$desc = "spread score (hectads/images), and having submitted over $minimum images";

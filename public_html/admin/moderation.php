@@ -347,6 +347,7 @@ from
 where
 	$sql_where
 	$sql_where2
+	and submitted < date_sub(now(),interval 30 minute)
 group by gridimage_id
 order by
 	$sql_order
@@ -404,7 +405,7 @@ foreach ($images->images as $i => $image) {
 
 	$fullpath=$images->images[$i]->_getFullpath();
 	list($width, $height, $type, $attr)=getimagesize($_SERVER['DOCUMENT_ROOT'].$fullpath);
-	if (max($width,$height) < 500 || min($width,$height) < 100)
+	if (max($width,$height) < 500)
 		$images->images[$i]->sizestr = $attr;
 }
 

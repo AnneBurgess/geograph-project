@@ -341,7 +341,7 @@ class Gazetteer
 						GeomFromText($rectangle),
 						point_en)
 				order by distance asc limit 1");
-		} else if ($gazetteer == 'towns' /*&& $reference_index == 1*/) {
+		} else if ($gazetteer == 'towns' && $reference_index == 1) {
 			$places = $db->GetRow("select
 					name as full_name,
 					'PPL' as dsg,
@@ -653,7 +653,7 @@ class Gazetteer
 					}
 			                $places[$id]['full_name'] = _utf8_decode($row['full_name']);
 				}
-				if ($c > 14) {
+				if ($c > 4) {
 					$placename = strtolower($placename);
 					foreach($places as $id => $row) {
 						$p1 = strtolower($row['full_name']);

@@ -12,6 +12,10 @@ $CONF['server_ip'] = '127.0.0.';
 
 //set to X to server from http://s[0-X].$domain/photos/....
 $CONF['enable_cluster'] = 2;
+$CONF['STATIC_HOST'] = "s0.geograph.mobile";
+
+$CONF['CONTENT_HOST'] = "geograph.mobile";
+$CONF['TILE_HOST'] = "t0.geograph.mobile";
 
 //this can be different to your main hostname if want to seperate out the hosting of the Google Earth Superlayer. 
 $CONF['KML_HOST'] = $_SERVER['HTTP_HOST'];
@@ -46,35 +50,6 @@ $CONF['db_persist']=''; //'?persist';
 //not yet implemented:
 ##$CONF['memcache']['smarty'] =& $CONF['memcache']['app'];
 
-// forum ids
-$CONF['forum_announce']          = 1;
-$CONF['forum_generaldiscussion'] = 2;
-$CONF['forum_suggestions']       = 3;
-$CONF['forum_bugreports']        = 4;
-$CONF['forum_gridsquare']        = 5;
-$CONF['forum_submittedarticles'] = 6;
-$CONF['forum_gallery']           = 7;  #11;
-$CONF['forum_moderator']         = -1; #9;
-$CONF['forum_privacy']           = -1; #14;
-$CONF['forum_teaching']          = -1; #8;
-$CONF['forum_devel']             = -1; #12;
-
-// topic ids
-$CONF['forum_topic_announce'] =  -1; #5808;
-$CONF['forum_topic_numsquare'] = -1; #1235;
-
-// forums which need custom templates
-$CONF['forum_to_template'][$CONF['forum_submittedarticles']] = '6';
-$CONF['forum_to_template'][$CONF['forum_gallery']] = '11';
-$CONF['forum_to_template'][$CONF['forum_bugreports']] = '4';
-
-$CONF['forum_lang'] = 'eng';
-$CONF['forum_date'] = 'j F Y H:i:s';
-$CONF['forum_templates'] = 'templates';
-$CONF['forum_title'] = 'Discuss';
-
-//path to php binary
-$CONF['phpdir']='/usr/bin/';
 
 $CONF['sphinx_host'] = "localhost";
 $CONF['sphinx_port'] = 3312;
@@ -157,7 +132,6 @@ $CONF['raster_service']='';
 // 'vob' - VisionOfBritain Historical Maps - Permission MUST be sought from the visionofbritain.org.uk webmaster before enableing this feature!
 // 'OS50k' - OSGB 50k Mapping - Licence Required (see next)
 // 'Google' - Use Google Mapping (api key required below)
-// 'Grid' - Should be used with 'Google'
 
 $CONF['google_maps_api_key'] = 'XXXXXXX';
 
@@ -193,30 +167,11 @@ $CONF['use_gazetteer'] = 'towns'; //OS/hist/towns/default
 $CONF['references'] = array(1 => 'Great Britain',2 => 'Ireland');
 
 //including the 'non filted version'
-$CONF['references_all'] = array(0=>'British Isles')+$CONF['references'];
+$CONF['references_all'] = array_merge(array(0=>'British Isles'),$CONF['references']);
 
 //false origins for the internal grid
 $CONF['origins'] = array(1 => array(206,0),2 => array(10,149));
 
-//number of characters in the grid prefix
-$CONF['gridpreflen'] = array(1 => 2, 2 => 1);
-
-//name of the grids (shown in page title)
-$CONF['gridrefname'] = array(1 => 'OS grid ', 2 => 'OS grid ');
-
-// google maps: show meridians n*$CONF['showmeridian'] degrees (0: don't show any meridian)
-$CONF['showmeridian'] = 0;
-
-// picture of the day
-
-$CONF['potd_daysperimage'] = 7;
-$CONF['potd_listlen'] = 20;
-
-// picture size
-
-$CONF['pano_upper_limit'] = 0; # 0.5  : try to keep height constant for 2:1 and above
-$CONF['pano_lower_limit'] = 0; # 0.25 : keep height*width constant for 4:1 and above
-$CONF['img_max_size'] = 640;
 
 ## search setup
 
@@ -267,10 +222,6 @@ $CONF['picnik_method'] = 'inabox'; //'inabox'|'redirect'
 
 
 
-
-$CONF['TILE_HOST'] = $_SERVER['HTTP_HOST'];
-$CONF['STATIC_HOST'] = $_SERVER['HTTP_HOST'];
-$CONF['CONTENT_HOST'] = $_SERVER['HTTP_HOST'];
 
 ##limits on numbers of thumbnails per page, and 'single item'
 $CONF['global_thumb_limit'] = 300;

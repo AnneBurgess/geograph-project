@@ -191,11 +191,11 @@ if (isset($_GET['coast_GB_40'])) {
 	
 	$user_id = intval($_POST['user_id']);
 	
+	$and_crit = " and type_or_user IN (-1,0";
 	if ($user_id > 0) {
-		$and_crit = " and (type_or_user = $user_id or type_or_user = 0)";
-	} else {
-		$and_crit = " and type_or_user = 0";
+		$and_crit .= ",$user_id";
 	}
+	$and_crit .= ")";
 	
 	$ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
 	$basemap = isset($_POST['base']);
@@ -214,7 +214,7 @@ if (isset($_GET['coast_GB_40'])) {
 		$x = $square->x;
 		$y = $square->y;
 
-		print "<h3>$gridref</h3>";
+		print "<h3>$gridref [$x,$y]</h3>";
 		if (count($squares) < 5) {
 			$sql="select * from mapcache 
 					where $x between map_x and (map_x+image_w/pixels_per_km-1) and 

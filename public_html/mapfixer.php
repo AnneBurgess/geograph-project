@@ -40,7 +40,7 @@ if (isset($_GET['gridref']))
 		$smarty->assign_by_ref('gridref', $gridref);
 		$smarty->assign('showinfo', 1);
 	
-		$isadmin = $USER->hasPerm('moderator')?1:0;
+		$isadmin = (($USER->user_id == 10124) || $USER->hasPerm('moderator') )?1:0;
 		$smarty->assign_by_ref('isadmin', $isadmin);
 	
 		$db = NewADOConnection($GLOBALS['DSN']);
@@ -83,7 +83,7 @@ if (isset($_GET['gridref']))
 			{
 				//we need to create a square
 				$matches=array();
-				preg_match('/^([A-Z]{1,3})(\d\d)(\d\d)$/',$gridref, $matches);
+				preg_match('/^([A-Z]{1,2})(\d\d)(\d\d)$/',$gridref, $matches);
 						
 				$gridsquare=$matches[1];
 				$eastings=$matches[2];

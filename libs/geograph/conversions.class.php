@@ -106,6 +106,7 @@ function wgs84_to_national($lat,$long,$usehermert = true) {
 	} else if ($uk) {
 		return array_merge($conv->wgs84_to_osgb36($lat,$long),array(1));
 	}
+	return array(0,0,0);
 }
 
 
@@ -166,23 +167,18 @@ function national_to_gridref($e,$n,$gr_length,$reference_index,$spaced = false) 
 
 	$db = $this->_getDB();
 
-	$x_lim=$x-100;
-	$y_lim=$y-100;
 	$sql="select prefix from gridprefix ".
-		"where CONTAINS(geometry_boundary, GeomFromText('POINT($x $y)')) ".
-		"and (origin_x > $x_lim) and (origin_y > $y_lim) ".
-		"and reference_index=$reference_index";
+		"where $x between origin_x and (origin_x+width-1) and ".
+		"$y between origin_y and (origin_y+height-1) and reference_index=$reference_index";
 	$prefix=$db->GetOne($sql);
-	#$sql="select prefix from gridprefix ".
-	#	"where $x between origin_x and (origin_x+width-1) and ".
-	#	"$y between origin_y and (origin_y+height-1) and reference_index=$reference_index";
-	#$prefix=$db->GetOne($sql);
 
 	$eastings = sprintf("%05d",($e+ 500000) % 100000); //cope with negative! (for Rockall...)
 	$northings = sprintf("%05d",$n % 100000);
 	
 
-	if ($gr_length) {
+	if ($gr_length == -1) { 
+		return array("$prefix",$len);
+	} elseif ($gr_length) {
 		$len = intval($gr_length/2);
 	} else {
 		//try to work out the shortest grid ref length
@@ -229,15 +225,10 @@ function internal_to_national($x,$y,$reference_index = 0) {
 			//when not on land just try any square!
 			// but favour the _smaller_ grid - works better, but still not quite right where the two grids almost overlap
 			$where_crit =  "order by reference_index desc";
-			$x_lim=$x-100;
-			$y_lim=$y-100;
 		
-			#$sql="select reference_index from gridprefix ".
-			#	"where $x between origin_x and (origin_x+width-1) and ".
-			#	"$y between origin_y and (origin_y+height-1) $where_crit";
 			$sql="select reference_index from gridprefix ".
-				"where CONTAINS(geometry_boundary, GeomFromText('POINT($x $y)')) and (origin_x > $x_lim) and (origin_y > $y_lim) ".
-				$where_crit;
+				"where $x between origin_x and (origin_x+width-1) and ".
+				"$y between origin_y and (origin_y+height-1) $where_crit";
 			$reference_index=$db->GetOne($sql);
 		}
 	}

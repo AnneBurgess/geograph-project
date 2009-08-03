@@ -57,6 +57,13 @@ while (!$recordSet->EOF)
 	if (strpos($image['imageclass'],',') !== FALSE || strpos($image['imageclass'],'"') !== FALSE)
 		$image['imageclass'] = '"'.str_replace('"', '""', $image['imageclass']).'"';
 	echo "{$image['gridimage_id']},{$image['title']},{$image['grid_reference']},{$image['realname']},{$image['imageclass']}";
+	if (!empty($_GET['desc'])) {
+		if (empty($image['comment'])) {
+			echo ',';
+		} else {
+			echo ',"'.str_replace('"', '""', $image['comment']).'"';
+		}
+	}
 	if (!empty($_GET['thumb'])) {
 		$gridimage->fastInit($image);
 		echo ','.$gridimage->getThumbnail(120,120,true);
@@ -94,6 +101,8 @@ while (!$recordSet->EOF)
 		echo ",{$image['imagetaken']}";
 	if (!empty($_GET['dir']))
 		echo ",{$image['view_direction']}";
+	if (!empty($_GET['hits']))
+		echo ",{$image['hits']}";
 
 	echo "\n";
 	$recordSet->MoveNext();

@@ -1,7 +1,7 @@
 <?php
 /**
  * $Project: GeoGraph $
- * $Id: recreate_maps.php 2578 2006-09-27 20:58:54Z barry $
+ * $Id$
  * 
  * GeoGraph geographic photo archive project
  * This file copyright (C) 2005 Barry Hunter (geo@barryhunter.co.uk)
@@ -127,7 +127,7 @@ for ($sitemap=1; $sitemap<=$sitemaps; $sitemap++)
 			"<loc>%s</loc>".
 			"<lastmod>%s</lastmod>".
 			"<changefreq>monthly</changefreq>".
-			"<geo:geo><geo:format>kml</geo:format></geo:geo>".
+			"<geo:geo><geo:format>kmz</geo:format></geo:geo>".
 			"</url>\n",
 			"http://".$CONF['KML_HOST'].$recordSet->fields['filename'],
 			$date

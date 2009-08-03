@@ -119,10 +119,21 @@ class GridImage
 	var $subject_gridref_precision;
 	
 	/**
+	* external image?
+	 */
+	var $ext;
+	var $ext_server;
+	var $ext_thumb_url;
+	var $ext_img_url;
+	var $ext_profile_url;
+	var $ext_gridimage_id;
+
+	/**
 	* constructor
 	*/
 	function GridImage($id = null)
 	{
+		$this->ext = false;
 		if (!empty($id)) {
 			$this->loadFromId($id);
 		}
@@ -273,6 +284,7 @@ class GridImage
 			if (!is_numeric($name))
 				$this->$name=$value;
 		}
+		$this->ext = false;
 		if (!empty($this->gridsquare_id)) {
 			$this->grid_square=new GridSquare;
 			if (is_object($this->db))
@@ -304,6 +316,7 @@ class GridImage
 	*/
 	function fastInit(&$arr)
 	{
+		$this->ext = false;
 		$this->grid_square=null;
 		$this->grid_reference='';
 		foreach($arr as $name=>$value)
@@ -375,6 +388,57 @@ class GridImage
 		
 		return $this->isValid();
 	}
+
+	/**
+	* assign members from gridimage_id and server (use api)
+	*/
+	function loadFromServer($server, $gridimage_id)
+	{
+		$this->_clear();
+		if (preg_match('/^\d+$/', $gridimage_id))
+		{
+			global $memcache;
+			$mkey = "$server:$gridimage_id";
+			//fails quickly if not using memcached!
+			$xml =& $memcache->name_get('e',$mkey);
+			
+			if (empty($xml)) {
+				$url = "http://$server/restapi.php/api/Photo/$gridimage_id";
+				$xml = simplexml_load_file($url);
+				
+				//fails quickly if not using memcached!
+				$memcache->name_set('e',$mkey,$xml,$memcache->compress,$memcache->period_long);
+			}
+			if ($xml !== false && $xml->status['state'] == 'ok') {
+				$this->grid_reference    = (string)$xml->gridref;
+				$this->title             = (string)$xml->title;
+				$this->realname          = (string)$xml->user;
+				$this->ext_img_url       = (string)$xml->img['src'];
+				$this->ext_profile_url   = (string)$xml->user['profile'];
+				$this->ext_thumb_url     = (string)$xml->thumbnail;
+				$this->ext               = true;
+				$this->ext_server        = $server;
+				$this->moderation_status = 'geograph'; //todo
+				$this->submitted         = (string)$xml->submitted;
+				$this->imagetaken        = (string)$xml->taken;
+				$this->imageclass        = (string)$xml->category;
+				$this->comment           = (string)$xml->comment;
+				$this->gridimage_id      = 0;
+				$this->ext_gridimage_id  = $gridimage_id;
+				$this->grid_square       = null;
+		
+				$this->profile_link = $this->ext_profile_url;
+				
+				if (empty($this->title))
+					$this->title="Untitled photograph for {$this->grid_reference}";
+				return true;
+			}
+
+
+		}
+		
+		return false;
+	}
 	
 	/**
 	* calculate a hash to prevent easy downloading of every image in sequence
@@ -400,9 +464,7 @@ class GridImage
 		$this->bigtitle=trim(preg_replace("/^{$this->grid_reference}/", '', $this->title));
 		$this->bigtitle=preg_replace('/(?<![\.])\.$/', '', $this->bigtitle);
 
-		$rid = $this->grid_square->reference_index;
-		$gridrefpref=$CONF['gridrefname'][$rid];
-		$smarty->assign('page_title', $this->bigtitle.":: {$gridrefpref}{$this->grid_reference}");
+		$smarty->assign('page_title', $this->bigtitle.":: OS grid {$this->grid_reference}");
 
 		$smarty->assign('image_taken', $taken);
 		$smarty->assign('ismoderator', $ismoderator);
@@ -571,7 +633,6 @@ class GridImage
 			return $this->fullpath;
 		}
 		
-		$yz=sprintf("%02d", floor($this->gridimage_id/1000000));
 		$ab=sprintf("%02d", floor(($this->gridimage_id%1000000)/10000));
 		$cd=sprintf("%02d", floor(($this->gridimage_id%10000)/100));
 		$abcdef=sprintf("%06d", $this->gridimage_id);
@@ -579,6 +640,7 @@ class GridImage
 		if ($this->gridimage_id<1000000) {
 			$fullpath="/photos/$ab/$cd/{$abcdef}_{$hash}.jpg";
 		} else {
+			$yz=sprintf("%02d", floor($this->gridimage_id/1000000));
 			$fullpath="/geophotos/$yz/$ab/$cd/{$abcdef}_{$hash}.jpg";
 		}
 		$ok=file_exists($_SERVER['DOCUMENT_ROOT'].$fullpath);
@@ -597,14 +659,21 @@ class GridImage
 					$target=$_SERVER['DOCUMENT_ROOT'].$fullpath;
 					
 					//create target dir
-					$base=$_SERVER['DOCUMENT_ROOT'].'/geophotos';
-					if (!is_dir("$base/$yz"))
-						mkdir("$base/$yz");
-					if (!is_dir("$base/$yz/$ab"))
-						mkdir("$base/$yz/$ab");
-					if (!is_dir("$base/$yz/$ab/$cd"))
-						mkdir("$base/$yz/$ab/$cd");
-			
+					if ($this->gridimage_id<1000000) {
+						$base=$_SERVER['DOCUMENT_ROOT'].'/photos';
+						if (!is_dir("$base/$ab"))
+							mkdir("$base/$ab");
+						if (!is_dir("$base/$ab/$cd"))
+							mkdir("$base/$ab/$cd");
+					} else {
+						$base=$_SERVER['DOCUMENT_ROOT'].'/geophotos';
+						if (!is_dir("$base/$yz"))
+							mkdir("$base/$yz");
+						if (!is_dir("$base/$yz/$ab"))
+							mkdir("$base/$yz/$ab");
+						if (!is_dir("$base/$yz/$ab/$cd"))
+							mkdir("$base/$yz/$ab/$cd");
+					}
 					$fout=fopen($target, 'wb');
 					if ($fout)
 					{
@@ -650,10 +719,20 @@ class GridImage
 			//fails quickly if not using memcached!
 			$size =& $memcache->name_get('is',$mkey);
 			if (!$size) {
-				$size=getimagesize($_SERVER['DOCUMENT_ROOT'].$fullpath);
-			
+				$db=&$this->_getDB();
+				
+				$prev_fetch_mode = $db->SetFetchMode(ADODB_FETCH_NUM);
+				$size = $db->getRow("select width,height from gridimage_size where gridimage_id = {$this->gridimage_id}");
+				$db->SetFetchMode($prev_fetch_mode);
+				$size[3] = "width=\"{$size[0]}\" height=\"{$size[1]}\"";
+
+				if (!$size) {
+					$size=getimagesize($_SERVER['DOCUMENT_ROOT'].$fullpath);
+				
+					$db->Execute("replace into gridimage_size set gridimage_id = {$this->gridimage_id},width = {$size[0]},height = {$size[1]}");
+				}
 				//fails quickly if not using memcached!
-				$memcache->name_set('is',$mkey,$places,$memcache->compress,$memcache->period_long);
+				$memcache->name_set('is',$mkey,$size,$memcache->compress,$memcache->period_long);
 			}
 			$this->cached_size = $size;
 		} else {
@@ -664,9 +743,9 @@ class GridImage
 		$title=htmlentities2($this->title);
 		
 		if (!empty($CONF['curtail_level']) && empty($GLOBALS['USER']->user_id) && isset($GLOBALS['smarty'])) {
-			$fullpath = cachize_url("http://".$CONF['CONTENT_HOST'].$fullpath);
+			$fullpath = cachize_url("http://".$CONF['STATIC_HOST'].$fullpath);
 		} elseif ($returntotalpath)
-			$fullpath="http://".$CONF['CONTENT_HOST'].$fullpath;
+			$fullpath="http://".$CONF['STATIC_HOST'].$fullpath;
 		
 		$html="<img alt=\"$title\" src=\"$fullpath\" {$size[3]}/>";
 		
@@ -691,8 +770,21 @@ class GridImage
 		//fails quickly if not using memcached!
 		$size =& $memcache->name_get('is',$mkey);
 		if (!$size) {
-			$fullpath=$this->_getFullpath();
-			$size=getimagesize($_SERVER['DOCUMENT_ROOT'].$fullpath);
+			$db=&$this->_getDB();
+			if ($this->gridimage_id) {
+				$prev_fetch_mode = $db->SetFetchMode(ADODB_FETCH_NUM);
+				$size = $db->getRow("select width,height from gridimage_size where gridimage_id = {$this->gridimage_id}");
+				$db->SetFetchMode($prev_fetch_mode);
+			}
+			
+			if (!$size) {
+				$fullpath=$this->_getFullpath();
+				$size=getimagesize($_SERVER['DOCUMENT_ROOT'].$fullpath);
+				
+				if ($this->gridimage_id) {
+					$db->Execute("replace into gridimage_size set gridimage_id = {$this->gridimage_id},width = {$size[0]},height = {$size[1]}");
+				}
+			}
 			
 			//fails quickly if not using memcached!
 			$memcache->name_set('is',$mkey,$size,$memcache->compress,$memcache->period_long);
@@ -986,9 +1078,45 @@ class GridImage
 			$thumbpath="/geophotos/$yz/$ab/$cd/{$abcdef}_{$hash}_{$maxw}x{$maxh}.jpg";
 		}
 
+		if (!empty($params['urlonly']) && $params['urlonly'] !== 2 && file_exists($_SERVER['DOCUMENT_ROOT'].$thumbpath)) {
+			$return=array();
+			$return['url']=$thumbpath;
+			if (!empty($CONF['enable_cluster'])) {
+				$return['server']= str_replace('0',($this->gridimage_id%$CONF['enable_cluster']),"http://{$CONF['STATIC_HOST']}");
+			} else {
+				$return['server']= "http://".$CONF['CONTENT_HOST'];
+			}
+			return $return;
+		}
+
 		$mkey = "{$this->gridimage_id}:{$maxw}x{$maxh}";
 		//fails quickly if not using memcached!
 		$size =& $memcache->name_get('is',$mkey);
+		if (!$size && file_exists($_SERVER['DOCUMENT_ROOT'].$thumbpath)) {
+			$db=&$this->_getDB();
+			$prev_fetch_mode = $db->SetFetchMode(ADODB_FETCH_NUM);
+			$size = $db->getRow("select width,height from gridimage_size where gridimage_id = {$this->gridimage_id}");
+			$db->SetFetchMode($prev_fetch_mode);
+
+			if ($size) {
+				//figure out size of image we'll keep
+				if ($size[0]>$size[1])
+				{
+					//landscape
+					$destw=$maxw;
+					$desth=round(($destw * $size[1])/$size[0]);
+				}
+				else
+				{
+					//portrait
+					$desth=$maxh;
+					$destw=round(($desth * $size[0])/$size[1]);
+				}
+				$size[0] = $destw; 
+				$size[1] = $desth;
+				$size[3] = "width=\"{$size[0]}\" height=\"{$size[1]}\"";
+			}
+		}
 		if ($size) {
 			$return=array();
 			$return['url']=$thumbpath;
@@ -1027,21 +1155,18 @@ class GridImage
 					} else {
 						list($width, $height, $type, $attr) = $info;
 						
-						if (($width>$maxw) || ($height>$maxh) || !$bestfit) {
+						if (($width>$maxw) || ($height>$maxh)) {
+							$operation = ($maxw+$maxh < 400)?'thumbnail':'resize';
+						} elseif (!$bestfit) {
+							$operation = 'adaptive-resize';
+						}
 						
+						if (isset($operation)) {
 							$unsharpen=$unsharp?"-unsharp 0x1+0.8+0.1":"";
 							
 							$raised=$bevel?"-raise 2x2":"";
 							
 							$operation = ($maxw+$maxh < 400)?'thumbnail':'resize';
-							$aspect_src=$width/$height;
-							$aspect_dest=$maxw/$maxh;
-
-							if ($bestfit && $aspect_src > 2 && $aspect_dest < 2) {
-								$bestfit = false;
-								$maxh = round($maxw/2);
-								$aspect_dest= 2;
-							}
 							
 							if ($bestfit)
 							{
@@ -1056,6 +1181,8 @@ class GridImage
 							}
 							else
 							{
+								$aspect_src=$width/$height;
+								$aspect_dest=$maxw/$maxh;
 								
 								if ($aspect_src > $aspect_dest)
 								{
@@ -1084,7 +1211,7 @@ class GridImage
 								
 								passthru ($cmd);
 								
-								//now resize // FIXME: one step!
+								//now resize
 								$cmd = sprintf ("\"%smogrify\" -$operation %ldx%ld $unsharpen $raised -quality 87 jpg:%s", 
 								$CONF['imagemagick_path'],
 								$maxw, $maxh, 
@@ -1101,7 +1228,7 @@ class GridImage
 							copy($_SERVER['DOCUMENT_ROOT'].$fullpath, $_SERVER['DOCUMENT_ROOT'].$thumbpath);
 						}	
 					}
-				} else { // FIXME not the same as above
+				} else {
 					//generate resized image
 					$fullimg = @imagecreatefromjpeg($_SERVER['DOCUMENT_ROOT'].$fullpath); 
 					if ($fullimg)
@@ -1193,7 +1320,7 @@ class GridImage
 			$html="<img alt=\"$title\" $attribname=\"$thumbpath\" {$size[3]} />";
 			
 			//fails quickly if not using memcached!
-			$memcache->name_set('is',$mkey,$size,$memcache->compress,$memcache->period_med);
+			$memcache->name_set('is',$mkey,$size,$memcache->compress,$memcache->period_long*10);
 		}
 		
 		$return['html']=$html;
@@ -1209,12 +1336,22 @@ class GridImage
 	*/
 	function getThumbnail($maxw, $maxh,$urlonly = false,$fullalttag = false,$attribname = 'src')
 	{
+		if ($this->ext) {
+			# (120,120,false,true);
+			# $resized['html'];
+			$title=$this->grid_reference.' : '.htmlentities2($this->title).' by '.$this->realname;
+			#$html="<img alt=\"$title\" $attribname=\"$thumbpath\" {$size[3]} />";
+			# width="120" height="90"
+			$html="<img alt=\"$title\" $attribname=\"{$this->ext_thumb_url}\" />";
+			return $html;
+		}
 		$params['maxw']=$maxw;
 		$params['maxh']=$maxh;
 		$params['attribname']=$attribname;
+		$params['urlonly']=$urlonly;
 		$resized=$this->_getResized($params);
 		
-		if ($urlonly) {
+		if (!empty($urlonly)) {
 			if ($urlonly === 2) 
 				return $resized;
 			else 

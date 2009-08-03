@@ -47,15 +47,11 @@ function get_loadavg()
  */
 function linux_loadavg() {
 	$buffer = "0 0 0";
-	if (is_readable("/proc/loadavg")) {
-		$f = fopen("/proc/loadavg","r");
-		if ($f) {
-			if (!feof($f)) {
-				$buffer = fgets($f, 1024);
-			}
-			fclose($f);
-		}
+	$f = fopen("/proc/loadavg","r");
+	if (!feof($f)) {
+		$buffer = fgets($f, 1024);
 	}
+	fclose($f);
 	$load = explode(" ",$buffer);
 	return (float)$load[0];
 }
@@ -196,7 +192,7 @@ while (1) {
 	} else {
 		//nothing more to do here
 
-		exit;//die('E');
+		die('E');
 	}
 
 	//sleep anyway for a bit

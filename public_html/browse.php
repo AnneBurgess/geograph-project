@@ -43,7 +43,11 @@ $square=new GridSquare;
 if (isset($_GET['inner'])) {
 	$template='browse_inner.tpl';
 } else {
-	$template='browse.tpl';
+	if (isset($_GET['t']) && $_GET['t'] > 1) {
+		$template='browse2.tpl';
+	} else {
+		$template='browse.tpl';
+	}
 	$smarty->assign('prefixes', $square->getGridPrefixes());
 	$smarty->assign('kmlist', $square->getKMList());
 }
@@ -84,7 +88,6 @@ if (isset($_GET['p']))
 	$grid_ok=$square->loadFromPosition($x, $y, true);
 	$grid_given=true;
 	$smarty->assign('gridrefraw', $square->grid_reference);
-	$smarty->assign('gridref2', strlen($square->grid_reference) <= 2 + $CONF['gridpreflen'][$square->reference_index]);
 }
 
 //set by grid components?
@@ -93,7 +96,6 @@ elseif (isset($_GET['setpos']))
 	$grid_given=true;
 	$grid_ok=$square->setGridPos($_GET['gridsquare'], $_GET['eastings'], $_GET['northings'],true);
 	$smarty->assign('gridrefraw', $square->grid_reference);
-	$smarty->assign('gridref2', strlen($square->grid_reference) <= 2 + $CONF['gridpreflen'][$square->reference_index]);
 }
 
 //set by grid ref?
@@ -106,7 +108,6 @@ elseif (isset($_GET['gridref']) && strlen($_GET['gridref']))
 	if ($grid_ok)
 	{
 		$smarty->assign('gridrefraw', stripslashes($_GET['gridref']));
-		$smarty->assign('gridref2', strlen($square->grid_reference) <= 2 + $CONF['gridpreflen'][$square->reference_index]);
 	}
 	else
 	{
@@ -301,7 +302,7 @@ if ($grid_given)
 					$square->reference_index,$spaced);
 				}
 			
-				preg_match('/^[A-Z]{1,3}\d\d(\d)\d\d(\d)$/',$_GET['centi'],$matches);
+				preg_match('/^[A-Z]{1,2}\d\d(\d)\d\d(\d)$/',$_GET['centi'],$matches);
 				if (!isset($matches[2])) {
 					die("invalid Grid Reference");
 				}
@@ -311,7 +312,6 @@ if ($grid_given)
 				
 				$grid_ok=$square->setByFullGridRef($_GET['centi'],false,true);
 				$smarty->assign('gridrefraw', stripslashes($_GET['centi']));
-				$smarty->assign('gridref2', strlen($square->grid_reference) <= 2 + $CONF['gridpreflen'][$square->reference_index]);
 			}
 			$filtered_title .= " in ".htmlentities2($_GET['centi'])." Centisquare<a href=\"/help/squares\">?</a>";
 		}
@@ -319,7 +319,7 @@ if ($grid_given)
 			if ($_GET['viewcenti'] == 'unspecified') {
 				$custom_where .= " and viewpoint_eastings = 0";
 			} else {
-				preg_match('/^[A-Z]{1,3}\d\d(\d)\d\d(\d)$/',$_GET['viewcenti'],$matches);
+				preg_match('/^[A-Z]{1,2}\d\d(\d)\d\d(\d)$/',$_GET['viewcenti'],$matches);
 				if (!isset($matches[2])) {
 					die("invalid Grid Reference");
 				}
@@ -334,7 +334,6 @@ if ($grid_given)
 				$custom_where .= " and viewpoint_eastings DIV 1000 = $e AND viewpoint_northings DIV 1000 = $n";
 				
 				$smarty->assign('gridrefraw', stripslashes($_GET['viewcenti']));
-				$smarty->assign('gridref2', strlen($square->grid_reference) <= 2 + $CONF['gridpreflen'][$square->reference_index]);
 			}
 			$filtered_title .= " photographer in ".htmlentities2($_GET['viewcenti'])." Centisquare<a href=\"/help/squares\">?</a>";
 		}
@@ -377,6 +376,27 @@ if ($grid_given)
 			$square->totalimagecount = $square->imagecount;
 			
 			if (!$db) $db=NewADOConnection($GLOBALS['DSN']);
+			
+			if ($template=='browse2.tpl' && $square->imagecount > 15 && $_GET['by'] !== '1') {
+			
+				//http://stackoverflow.com/questions/1138006/multi-column-distinct-in-mysql
+				
+				$table = "tmp_".md5(uniqid());
+				
+				$db->Execute("CREATE TEMPORARY TABLE $table ENGINE HEAP SELECT * FROM gridimage_search WHERE grid_reference = '{$square->grid_reference}' ORDER BY ftf DESC, RAND()");
+				
+				$db->Execute("ALTER IGNORE TABLE $table ADD UNIQUE (user_id),ADD UNIQUE (imageclass)");
+				
+				$sql = "SELECT * FROM $table LIMIT 20";
+				
+				$imagelist = new ImageList();
+				$imagelist->_getImagesBySql($sql);
+				$smarty->assign_by_ref('images', $imagelist->images);
+				
+				#$images=$square->getImages($inc_all_user,$custom_where,'order by ftf desc,gridimage_id limit 15');
+				#$smarty->assign_by_ref('images', $images);
+				$smarty->assign('sample', count($imagelist->images) );
+			} else {
 			
 			$row = $db->cacheGetRow($cacheseconds,"SELECT 
 			count(distinct user_id) as user,
@@ -422,6 +442,7 @@ if ($grid_given)
 				$image=new GridImage;
 				$image->fastInit($rec);
 				$smarty->assign_by_ref('image', $image);
+			}
 			}
 		} elseif (!empty($_GET['by'])) {
 			$square->totalimagecount = $square->imagecount;

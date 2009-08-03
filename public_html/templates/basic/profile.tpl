@@ -1,5 +1,6 @@
+{assign var="extra_meta" value="<link rel=\"short_url\" href=\"http://geograph.org.uk/u/`$profile->user_id`\" /><link rel=\"canonical\" href=\"/profile/`$profile->user_id`\" />"}
 {include file="_std_begin.tpl"}
-<script src="{"/sorttable.js"|revision}" type="text/javascript"></script>
+<script src="{"/sorttable.js"|revision}"></script>
 
 {dynamic}
 {if $credit_realname}
@@ -40,18 +41,14 @@
 
 
 
-<h2><a name="top"></a><img src="http://www.gravatar.com/avatar/{$profile->md5_email}?r=G&amp;d=http://www.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536%3Fs=30&amp;s=50" alt="{$profile->realname|escape:'html'}'s Gravatar" style="vertical-align:middle;padding-right:10px"/>Profile for {$profile->realname|escape:'html'}</h2>
+<h2><a name="top"></a><img src="http://www.gravatar.com/avatar/{$profile->md5_email}?r=G&amp;d=http://www.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536%3Fs=30&amp;s=50" align="absmiddle" alt="{$profile->realname|escape:'html'}'s Gravatar" style="padding-right:10px"/>Profile for {$profile->realname|escape:'html'}</h2>
 
-{if $profile->role}
+{if $profile->role && $profile->role ne 'Member'}
 	<div style="margin-top:0px;border-top:1px solid red; border-bottom:1px solid red; color:purple; padding: 4px;"><b>Geograph Role</b>: {$profile->role}</div>
-{else}
-	{if strpos($profile->rights,'admin') > 0}
-		<div style="margin-top:0px;border-top:1px solid red; border-bottom:1px solid red; color:purple; padding: 4px;"><b>Geograph Role</b>: Developer</div>
-	{else}
-		{if strpos($profile->rights,'moderator') > 0}
-			<div style="margin-top:0px;border-top:1px solid red; border-bottom:1px solid red; color:purple; padding: 4px;"><b>Geograph Role</b>: Moderator</div>
-		{/if}
-	{/if}
+{elseif strpos($profile->rights,'admin') > 0}
+	<div style="margin-top:0px;border-top:1px solid red; border-bottom:1px solid red; color:purple; padding: 4px;"><b>Geograph Role</b>: Developer</div>
+{elseif strpos($profile->rights,'moderator') > 0}
+	<div style="margin-top:0px;border-top:1px solid red; border-bottom:1px solid red; color:purple; padding: 4px;"><b>Geograph Role</b>: Moderator</div>	
 {/if}
 
 <ul>
@@ -98,8 +95,8 @@
 
 {if $profile->about_yourself && $profile->public_about}
 	<div class="caption" style="background-color:#dddddd; padding:10px;">
-	<h3 style="margin-top:0px;margin-bottom:0px">More about me</h3>
-	{$profile->about_yourself|nl2br|GeographLinks:true}</div>
+	<h2 style="margin-top:0px;margin-bottom:0px">About Me</h2>
+	{$profile->about_yourself|TruncateWithExpand:'(<small>this is a preview only</small>) <big>Click here to <b>Read More</b></big>...'|nl2br|GeographLinks:true}</div>
 {/if}
 
 {if $user->user_id eq $profile->user_id}
@@ -112,7 +109,7 @@
 {if $profile->stats.images gt 0}
  	<div style="background-color:#dddddd; padding:10px;">
  		{if $profile->stats.images > 2}
-		<div style="float:right; position:relative; margin-top:0px; font-size:0.7em">View Breakdown by <a href="/statistics/breakdown.php?by=status&amp;u={$profile->user_id}" rel="nofollow">Classification</a>, <a href="/statistics/breakdown.php?by=takenyear&amp;u={$profile->user_id}" rel="nofollow">Date Taken</a> or <a href="/statistics/breakdown.php?by=gridsq&amp;u={$profile->user_id}" rel="nofollow">Myriad</a><sup><a href="/help/squares" title="What is a Myriad?">?</a></sup>.</div>
+		<div style="float:right; position:relative; margin-top:0px; font-size:0.7em">View Breakdown by <a href="/statistics/breakdown.php?by=status&u={$profile->user_id}" rel="nofollow">Classification</a>, <a href="/statistics/breakdown.php?by=takenyear&u={$profile->user_id}" rel="nofollow">Date Taken</a> or <a href="/statistics/breakdown.php?by=gridsq&u={$profile->user_id}" rel="nofollow">Myriad</a><sup><a href="/help/squares" title="What is a Myriad?">?</a></sup>.</div>
 		{/if}
 		<h3 style="margin-top:0px;margin-bottom:0px">My Statistics</h3>
 		<ul>
@@ -134,8 +131,13 @@
 					{/if}
 				</li>
 			{/if}
-			
-			
+			{if $profile->stats.geographs}
+				<li><b>{$profile->stats.geographs}</b> Geograph{if $profile->stats.geographs ne 1}s{/if}
+				{if $profile->stats.geographs != $profile->stats.images}
+					and <b>{$profile->stats.images-$profile->stats.geographs}</b> Supplemental
+				{/if}
+				</li>
+			{/if}
 			<li><b>{$profile->stats.images}</b> Photograph{if $profile->stats.images ne 1}s{/if}
 				{if $profile->stats.squares gt 1}
 					<ul style="font-size:0.8em;margin-bottom:2px">
@@ -168,11 +170,9 @@
 {if $userimages}
 	<div style="float:right; position:relative; font-size:0.7em; padding:10px"><a href="/search.php?u={$profile->user_id}&amp;orderby=submitted&amp;reverse_order_ind=1">Find images by {$profile->realname|escape:'html'}</a> (<a href="/search.php?u={$profile->user_id}&amp;orderby=submitted&amp;reverse_order_ind=1&amp;displayclass=thumbs">Thumbnail Only</a>, <a href="/search.php?u={$profile->user_id}&amp;orderby=submitted&amp;reverse_order_ind=1&amp;displayclass=slide">Slide Show Mode</a>)<br/>
 	<form action="/search.php" style="display:inline">
-	<div>
 	<label for="fq">Search</label>: <input type="text" name="q" id="fq" size="20"{dynamic}{if $q} value="{$q|escape:'html'}"{/if}{/dynamic}/>
 	<input type="hidden" name="user_id" value="{$profile->user_id}"/>
 	<input type="submit" value="Find"/>
-	</div>
 	</form></div>
 	<h3 style="margin-bottom:0px">Photographs</h3>
 	
@@ -184,7 +184,7 @@
 	<br style="clear:both"/>
 	<table class="report sortable" id="photolist" style="font-size:8pt;">
 	<thead><tr>
-		<td><img title="Any grid square discussions?" src="/templates/basic/img/discuss.gif" alt="" width="10" height="10" /> ?</td>
+		<td><img title="Any grid square discussions?" src="/templates/basic/img/discuss.gif" width="10" height="10"> ?</td>
 		<td>Grid Ref</td>
 		<td>Title</td>
 		<td sorted="desc">Submitted</td>
@@ -216,15 +216,15 @@
 
 	<ul>
 		
-		<li><b>Maps</b>: {if $profile->stats.images gt 10}<a href="/profile/{$profile->user_id}/map" rel="nofollow">Personalised Geograph Map</a> or {/if} Recent Photos on <a href="http://maps.google.co.uk/maps?q=http://{$http_host}/profile/{$profile->user_id}/feed/recent.kml&amp;ie=UTF8&amp;om=1">Google Maps</a></li>
+		<li><b>Maps</b>: {if $profile->stats.images gt 10}<a href="/profile/{$profile->user_id}/map" rel="nofollow">Personalised Geograph Map</a> or {/if} Recent Photos on <a href="http://maps.google.co.uk/maps?q=http://{$http_host}/profile/{$profile->user_id}/feed/recent.kml&ie=UTF8&om=1">Google Maps</a></li>
 
 		<li><b>Recent Images</b>: <a title="View images by {$profile->realname} in Google Earth" href="/search.php?u={$profile->user_id}&amp;orderby=submitted&amp;reverse_order_ind=1&amp;kml">as KML</a> or <a title="RSS Feed for images by {$profile->realname}" href="/profile/{$profile->user_id}/feed/recent.rss" class="xml-rss">RSS</a> or <a title="GPX file for images by {$profile->realname}" href="/profile/{$profile->user_id}/feed/recent.gpx" class="xml-gpx">GPX</a></li>
 		{if $profile->stats.images gt 10}
 			{dynamic}{if $user->registered}
 				<li><b>Download</b>: 
-					<a title="Comma Seperated Values - file for images by {$profile->realname}" href="/export.csv.php?u={$profile->user_id}&amp;supp=1{if $user->user_id eq $profile->user_id}&amp;taken=1{/if}">CSV</a>
+					<a title="Comma Seperated Values - file for images by {$profile->realname}" href="/export.csv.php?u={$profile->user_id}&amp;supp=1{if $user->user_id eq $profile->user_id}&amp;taken=1&amp;hits=1{/if}">CSV</a>
 					{if $user->user_id eq $profile->user_id},
-						<a title="Excel 2003 XML - file for images by {$profile->realname}" href="/export.excel.xml.php?u={$profile->user_id}&amp;supp=1{if $user->user_id eq $profile->user_id}&amp;taken=1{/if}">XML<small> for Excel <b>2003</b></small></a>
+						<a title="Excel 2003 XML - file for images by {$profile->realname}" href="/export.excel.xml.php?u={$profile->user_id}&amp;supp=1{if $user->user_id eq $profile->user_id}&amp;taken=1&amp;hits=1{/if}">XML<small> for Excel <b>2003</b></small></a>
 					{/if} of all images</li>
 			{/if}{/dynamic}
 		{/if}
@@ -241,6 +241,6 @@
 {/if}
 
 
-<div style="text-align:right"><a href="#top">Back to Top</a></div>
+<div align="right"><a href="#top">Back to Top</a></div>
 
 {include file="_std_end.tpl"}

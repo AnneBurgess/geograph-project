@@ -67,7 +67,7 @@
 	<li><a title="IRC Chat" href="/chat/"><b>realtime chat</b> with other members</a></li>
 	<li><a title="Geograph Events" href="/events/"><b>meet other members</b> at local events</a> <a title="geoRSS Feed for Geograph Events" href="/events/feed.rss" class="xml-rss">RSS</a></li>
 	<li><a title="Articles" href="/article/">submit your own <b>article</b></a> <a title="RSS Feed for Geograph Articles" href="/article/feed/recent.rss" class="xml-rss">RSS</a></li>
-	<li><a title="Galleries" href="/discuss/?action=vtopic&forum={$forum_gallery}">create <b>submitted galleries</b></a> <a title="RSS Feed for Geograph Galleries" href="/discuss/syndicator.php?forum={$forum_gallery}" class="xml-rss">RSS</a></li>
+	<li><a title="Galleries" href="/discuss/?action=vtopic&forum=11">create <b>submitted galleries</b></a> <a title="RSS Feed for Geograph Galleries" href="/discuss/syndicator.php?forum=11" class="xml-rss">RSS</a></li>
 </ul>
 {/if}
  
@@ -158,6 +158,7 @@ Refine:
 	<li><a href="/statistics/leaderhectad.php"><b>Hectad</b> Leaderboard for <b>First Geographs</b></a></li>
 	<li><a href="/statistics/leaderallhectad.php"><b>Hectad</b> Leaderboard all Images</a></li>
 </ul>
+<i>{external href="http://www.nearby.org.uk/geograph/leaderboards.html" text="Rough and ready page giving a few more examples"}</i>
 
 
 <h3><a name="stats"></a>More Statistics...</h3>
@@ -191,6 +192,7 @@ Refine:
 	<li>Past Activity: <ul>
 	   <li><a href="/statistics/overtime.php">Photo Submission Activity Breakdown</a></li>
 	   <li><a href="/statistics/overtime.php?date=taken">Photo Taken Activity Breakdown</a></li>
+	   <li><a href="/statistics/overtime_users.php" title="Monthly Breakdown new User Signups">User Signups</a></li>
 	   <li><a href="/statistics/overtime_forum.php">Forum Posting Breakdown</a></li>
 	   <li><a href="/statistics/overtime_tickets.php">Change Suggestions</a></li>
 	   <li><a href="/statistics/busyday.php">Most taken in a day</a></li>

@@ -1,3 +1,4 @@
+{assign var="extra_meta" value="<link rel=\"short_url\" href=\"http://geograph.org.uk/p/`$image->gridimage_id`\" />"}
 {include file="_std_begin.tpl"}
 
 {if $image}
@@ -33,21 +34,7 @@
 <div class="{if $image->isLandscape()}photolandscape{else}photoportrait{/if}">
   <div class="img-shadow" id="mainphoto">{$image->getFull()}</div>
   
-  {literal}
-  <script type="text/javascript">
-  
-  function redrawMainImage() {
-  	el = document.getElementById('mainphoto');
-  	el.style.display = 'none';
-  	el.style.display = '';
-  }
-  AttachEvent(window,'load',redrawMainImage,false);
-  AttachEvent(window,'load',showMarkedImages,false);
-  
-  </script>
-  {/literal}
-  
-  <div class="caption"><b>{$image->title|escape:'html'}</b></div>
+  <div class="caption" style="font-weight:bold" xmlns:dc="http://purl.org/dc/elements/1.1/" property="dc:title">{$image->title|escape:'html'}</div>
 
   {if $image->comment}
   <div class="caption">{$image->comment|escape:'html'|nl2br|geographlinks|hidekeywords}</div>
@@ -58,8 +45,8 @@
 
 <!-- Creative Commons Licence -->
 <div class="ccmessage"><a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/"><img 
-alt="Creative Commons Licence [Some Rights Reserved]" src="http://creativecommons.org/images/public/somerights20.gif" /></a> &nbsp; &copy; Copyright <a title="View profile" href="{$image->profile_link}">{$image->realname|escape:'html'}</a> and  
-licensed for reuse under this <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/" class="nowrap">Creative Commons Licence</a>.</div>
+alt="Creative Commons Licence [Some Rights Reserved]" src="http://creativecommons.org/images/public/somerights20.gif" /></a> &nbsp; &copy; Copyright <a title="View profile" href="{$image->profile_link}" xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName" rel="cc:attributionURL">{$image->realname|escape:'html'}</a> and  
+licensed for reuse under this <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/" class="nowrap" about="{$image->_getFullpath(true,true)}" title="Creative Commons Attribution-Share Alike 2.0 Licence">Creative Commons Licence</a>.</div>
 <!-- /Creative Commons Licence -->
 
 <!--
@@ -68,11 +55,15 @@ licensed for reuse under this <a rel="license" href="http://creativecommons.org/
 
 -->
 
+{if $image_taken && $image->imagetaken < 2009}
+<div class="keywords" style="top:-3em;float:right;position:relative;font-size:0.8em;height:0em;z-index:-10" title="year photo was taken">year taken <div style="font-size:3em;line-height:0.5em">{$image->imagetaken|truncate:4:''}</div></div>
+{/if}
+
 <div class="buttonbar">
 
 <table style="width:100%">
 <tr>
-	<td colspan="6" align="center" style="background-color:#c0c0c0;font-size:0.7em;"><b><a href="/reuse.php?id={$image->gridimage_id}">Find out how to reuse this Image</a></b> For example on your webpage, blog, a forum, or Wikipedia. </td>
+	<td colspan="6" align="center" style="background-color:lightgrey;font-size:0.7em;"><b><a href="/reuse.php?id={$image->gridimage_id}">Find out how to reuse this Image</a></b> For example on your webpage, blog, a forum, or Wikipedia. </td>
 </tr>
 <tr>
 {if $enable_forums}
@@ -183,7 +174,7 @@ licensed for reuse under this <a rel="license" href="http://creativecommons.org/
 
 <dt>Subject Location</dt>
 <dd style="font-family:verdana, arial, sans serif; font-size:0.8em">
-{if $image->grid_square->reference_index eq 1}OSGB36{else}Irish{/if}: <img src="http://{$static_host}/img/geotag_16.png" width="10" height="10" alt="geotagged!" style="vertical-align:middle;" /> <a href="/gridref/{$image->subject_gridref}/links">{$image->subject_gridref}</a> [{$image->subject_gridref_precision}m precision]<br/>
+{if $image->grid_square->reference_index eq 1}OSGB36{else}Irish{/if}: <img src="http://{$static_host}/img/geotag_16.png" width="10" height="10" align="absmiddle" alt="geotagged!"/> <a href="/gridref/{$image->subject_gridref}/links">{$image->subject_gridref}</a> [{$image->subject_gridref_precision}m precision]<br/>
 WGS84: <span class="geo"><abbr class="latitude" title="{$lat|string_format:"%.5f"}">{$latdm}</abbr> <abbr class="longitude" 
 title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 </dd>
@@ -192,7 +183,7 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 <dt>Photographer Location</dt>
 
 <dd style="font-family:verdana, arial, sans serif; font-size:0.8em">
-{if $image->grid_square->reference_index eq 1}OSGB36{else}Irish{/if}: <img src="http://{$static_host}/img/geotag_16.png" width="10" height="10" alt="geotagged!" style="vertical-align:middle;" /> <a href="/gridref/{$image->photographer_gridref}/links">{$image->photographer_gridref}</a></dd>
+{if $image->grid_square->reference_index eq 1}OSGB36{else}Irish{/if}: <img src="http://{$static_host}/img/geotag_16.png" width="10" height="10" align="absmiddle" alt="geotagged!"/> <a href="/gridref/{$image->photographer_gridref}/links">{$image->photographer_gridref}</a></dd>
 {/if}
 
 {if $view_direction && $image->view_direction != -1}
@@ -222,12 +213,15 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 
 </div>
 <br style="clear:both"/>
+{if $image->hits}
+	<div style="text-align:right;font-size:0.8em">This page has been viewed about <b>{$image->hits}</b> times. <a href="/help/hit_counter">Read more</a></div>
+{/if}
 <div class="interestBox" style="text-align:center">View this location: 
 
 {if $image->moderation_status eq "geograph" || $image->moderation_status eq "accepted"}
 
 <small><a title="Open in Google Earth" href="http://{$http_host}/photo/{$image->gridimage_id}.kml" class="xml-kml" type="application/vnd.google-earth.kml+xml">KML</a> (Google Earth)</small>, 
-{external title="Open in Google Maps" href="http://maps.google.co.uk/maps?q=http://`$http_host`/photo/`$image->gridimage_id`.kml" text="Google Maps"}, 
+{external title="Open in Google Maps" href="http://maps.google.co.uk/maps?q=http://`$http_host`/photo/`$image->gridimage_id`.kml&amp;z=13" text="Google Maps"}, 
 
 {/if}
 
@@ -241,7 +235,7 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 	{assign var="imagetakenurl" value=$image_taken|date_format:"&amp;taken=%Y-%m-%d"}
 {/if}
 
-<span class="nowrap"><img src="http://{$static_host}/img/geotag_16.png" width="16" height="16" alt="geotagged!" style="vertical-align:middle;" /> <a href="/gridref/{$image->subject_gridref}/links?{$imagetakenurl}&amp;title={$image->title|escape:'url'}&amp;id={$image->gridimage_id}"><b>More Links for this image</b></a></span>
+<span class="nowrap"><img src="http://{$static_host}/img/geotag_16.png" width="16" height="16" align="absmiddle" alt="geotagged!"/> <a href="/gridref/{$image->subject_gridref}/links?{$imagetakenurl}&amp;title={$image->title|escape:'url'}&id={$image->gridimage_id}"><b>More Links for this image</b></a></span>
 </div>
 
 
@@ -254,8 +248,18 @@ function addStyleLinks() {
 	document.getElementById('styleLinks').innerHTML = 'Background for photo viewing: {if $maincontentclass eq "content_photowhite"}<b>white</b>{else}<a hr'+'ef="/photo/{$image->gridimage_id}?style=white" rel="nofollow" class="robots-nofollow robots-noindex">White</a>{/if}/{if $maincontentclass eq "content_photoblack"}<b>black</b>{else}<a hr'+'ef="/photo/{$image->gridimage_id}?style=black" rel="nofollow" class="robots-nofollow robots-noindex">Black</a>{/if}/{if $maincontentclass eq "content_photogray"}<b>grey</b>{else}<a hr'+'ef="/photo/{$image->gridimage_id}?style=gray" rel="nofollow" class="robots-nofollow robots-noindex">Grey</a>{/if}';
 {literal}
 }
-{/literal}
  AttachEvent(window,'load',addStyleLinks,false);
+
+
+function redrawMainImage() {
+	el = document.getElementById('mainphoto');
+	el.style.display = 'none';
+	el.style.display = '';
+}
+ AttachEvent(window,'load',redrawMainImage,false);
+ AttachEvent(window,'load',showMarkedImages,false);
+
+{/literal}
 /* ]]> */
 </script>
 

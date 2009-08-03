@@ -6,10 +6,11 @@
  * GeoGraph geographic photo archive project
  * http://geograph.sourceforge.net/
  *
- * This file copyright (C) 2005 Barry Hunter (geo@barryhunter.co.uk)
+ * This file copyright (C) 2009 Barry Hunter (geo@barryhunter.co.uk)
  *   adapted from OSGB spreadsheet (www.gps.gov.uk)
  *    by Ian Harris 2004 (ian@teasel.org)
- *     added Irish Grid References by Barry Hunter
+ *     added Irish Grid References by Barry Hunter (2005)
+ *     added ITM by Barry Hunter (May 2009)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,8 +28,9 @@
  */
 
 /**
-* Perform WGS84 Lat/Long <=> OSGB36 Grid Reference 
-*  and WGS84 Lat/Long <=> Irish Grid Reference Conversion
+* Perform WGS84 Lat/Long <=> OSGB36 Grid Reference Conversion
+*  and WGS84 Lat/Long <=> "Irish Grid" (IG) Conversion
+*  and WGS84 Lat/Long <=> "Irish Transverse Mercator" (ITM) Conversion
 *
 * @package Geograph
 * @author Barry Hunter <geo@barryhunter.co.uk>
@@ -41,6 +43,30 @@ class ConversionsLatLong extends Conversions
 # great circle distance in m
 function distance ($lat1, $lon1, $lat2, $lon2) {
 	return (6371000*3.1415926*sqrt(($lat2-$lat1)*($lat2-$lat1) + cos($lat2/57.29578)*cos($lat1/57.29578)*($lon2-$lon1)*($lon2-$lon1))/180);
+}
+
+/**************************
+* ITM Functions
+***************************/
+
+# www.osi.ie/GetAttachment.aspx?id=8ec9f05d-d698-488e-a4f5-07227854d10b
+
+#ITM uses GRS80 which is equivilent to WGS84 so no need for datum transformations!
+
+function wgs84_to_itm($lat,$long) {
+    
+    $e = $this->Lat_Long_to_East ($lat,$long,6378137,6356752.314, 600000,       0.999820,53.50000,-8.00000);
+    $n = $this->Lat_Long_to_North($lat,$long,6378137,6356752.314, 600000,750000,0.999820,53.50000,-8.00000);
+
+    return array($e,$n);
+}
+
+function itm_to_wgs84($e,$n) {
+ 
+    $lat = $this->E_N_to_Lat ($e,$n,6378137,6356752.314,600000,750000,0.999820,53.50000,-8.00000);
+    $lon = $this->E_N_to_Long($e,$n,6378137,6356752.314,600000,750000,0.999820,53.50000,-8.00000);
+
+    return array($lat,$lon);
 }
 
 /**************************

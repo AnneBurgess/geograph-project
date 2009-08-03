@@ -46,6 +46,10 @@ if (isset($_POST['msg']))
 	{
 		if (strlen($msg))
 		{
+			if ($_POST['referring_page'] == 'n/a' && !empty($_POST['name'])) {
+				die("Spam, Spam, Eggs, Spam, Cheese and Spam!");
+			}
+		
 			if (strlen($subject)==0)
 				$subject='Re: '.$_SERVER['HTTP_HOST'];
 			
@@ -85,6 +89,18 @@ if (isset($_REQUEST['referring_page']))
 	$referring_page=$_REQUEST['referring_page'];
 elseif (isset($_SERVER['HTTP_REFERER']))
 	$referring_page=$_SERVER['HTTP_REFERER'];
+	
+if (preg_match("/photo\/(\d+)/",$referring_page,$m)) {
+
+	require_once('geograph/gridsquare.class.php');
+	require_once('geograph/gridimage.class.php');
+
+	$image=new GridImage();
+	$image->loadFromId($m[1]);
+	
+	$smarty->assign_by_ref('image', $image);
+}
+	
 	
 $smarty->assign('referring_page',$referring_page);
 	

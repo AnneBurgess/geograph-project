@@ -44,15 +44,11 @@ function get_loadavg()
  */
 function linux_loadavg() {
 	$buffer = "0 0 0";
-	if (is_readable("/proc/loadavg")) {
-		$f = fopen("/proc/loadavg","r");
-		if ($f) {
-			if (!feof($f)) {
-				$buffer = fgets($f, 1024);
-			}
-			fclose($f);
-		}
+	$f = fopen("/proc/loadavg","r");
+	if (!feof($f)) {
+		$buffer = fgets($f, 1024);
 	}
+	fclose($f);
 	$load = explode(" ",$buffer);
 	return (float)$load[0];
 }
@@ -77,6 +73,8 @@ $param=array(
 	'timeout'=>14, //timeout in minutes
 	'sleep'=>10,	//sleep time in seconds
 	'load'=>100,	//maximum load average
+	'base'=>0,	//delete the basemaps?
+	'dryrun'=>0,	//test only?
 	'help'=>0,		//show script help?
 );
 
@@ -114,6 +112,8 @@ php recreate_maps.php
     --timeout=<minutes> : maximum runtime of script (14)
     --sleep=<seconds>   : seconds to sleep if load average exceeded (10)
     --load=<loadavg>    : maximum load average (100)
+    --base=1/0          : delete the basemap (0)
+    --dryrun=1/0        : dont actully delete (0)
     --help              : show this message	
 ---------------------------------------------------------------------
 	
@@ -135,6 +135,7 @@ require_once('geograph/gridimage.class.php');
 require_once('geograph/gridsquare.class.php');
 require_once('geograph/map.class.php');
 require_once('geograph/image.inc.php');
+require_once('geograph/mapmosaic.class.php');
 
 $db = NewADOConnection($GLOBALS['DSN']);
 
@@ -142,13 +143,13 @@ $start_time = time();
 
 $end_time = $start_time + (60*$param['timeout']);
 
-#$map=new GeographMap;
-			
+
 while (1) {
 
-	$invalid_maps = $db->GetOne("select count(*) from mapcache where age > 0 and type_or_user >= -1");
+	$invalid_maps = $db->GetOne("select age from mapcache where age > 0 and type_or_user >= -1"); //we only need to know there is one or more, not how many
 
 	if ($invalid_maps) {
+		
 		//done as many small select statements to allow new maps to be processed 
 		$recordSet = &$db->Execute("select * from mapcache where age > 0 and type_or_user >= -1
 			order by pixels_per_km desc, age desc limit 50");
@@ -189,7 +190,7 @@ while (1) {
 			$recordSet->MoveNext();
 
 		}
-		
+
 	} else {
 		//nothing more to do here
 
@@ -198,14 +199,12 @@ while (1) {
 	
 	//sleep anyway for a bit
 	sleep($param['sleep']);
-					
+	
 	if (time()>$end_time) {
 		//retreat and let the next recruit take the strain
-		exit;	
+		exit;
 	}
-}	
+}
 
- 
 
-	
 ?>

@@ -520,35 +520,29 @@ class GeographMapMosaic
 			if (isset($this->old_centrex)) {
 				//if zooming out use the old grid!
 				//or in then use the click point grid
-				$x_point=$this->old_centrex;
-				$y_point=$this->old_centrey;
+				$point = "'POINT({$this->old_centrex} {$this->old_centrey})'";
 			} else {
-				$x_point=$x_km;
-				$y_point=$y_km;
+				$point = "'POINT($x_km $y_km)'";
 			}
-			$x_lim=$x_point-100;
-			$y_lim=$y_point-100;
-			$point = "'POINT($x_point $y_point)'";
 			$sql="select prefix,origin_x,origin_y,reference_index from gridprefix 
-				where CONTAINS(geometry_boundary, GeomFromText($point)) and (origin_x > $x_lim) and (origin_y > $y_lim)
+				where CONTAINS(geometry_boundary, GeomFromText($point))
 				order by landcount desc, reference_index desc limit 1";
-			$prefix=$db->GetRow($sql);
 			
-			#if (empty($prefix['prefix'])) { 
-			#	//if fails try a less restrictive search
-			#	if (isset($this->old_centrex)) {
-			#		$sql="select prefix,origin_x,origin_y,reference_index from gridprefix 
-			#			where {$this->old_centrex} between origin_x and (origin_x+width-1) and 
-			#			{$this->old_centrey} between origin_y and (origin_y+height-1)
-			#			order by landcount desc, reference_index limit 1";
-			#	} else {
-			#		$sql="select prefix,origin_x,origin_y,reference_index from gridprefix 
-			#			where $x_km between origin_x and (origin_x+width-1) and 
-			#			$y_km between origin_y and (origin_y+height-1)
-			#			order by landcount desc, reference_index limit 1";
-			#	}
-			#	$prefix=$db->GetRow($sql);
-			#}
+			if (empty($prefix['prefix'])) { 
+				//if fails try a less restrictive search
+				if (isset($this->old_centrex)) {
+					$sql="select prefix,origin_x,origin_y,reference_index from gridprefix 
+						where {$this->old_centrex} between origin_x and (origin_x+width-1) and 
+						{$this->old_centrey} between origin_y and (origin_y+height-1)
+						order by landcount desc, reference_index limit 1";
+				} else {
+					$sql="select prefix,origin_x,origin_y,reference_index from gridprefix 
+						where $x_km between origin_x and (origin_x+width-1) and 
+						$y_km between origin_y and (origin_y+height-1)
+						order by landcount desc, reference_index limit 1";
+				}
+				$prefix=$db->GetRow($sql);
+			}
 							
 			if (!empty($prefix['prefix'])) { 
 				$n=$y_km-$prefix['origin_y'];
@@ -913,7 +907,7 @@ class GeographMapMosaic
 
 		$this->setScale($scale);
 		$this->setMosaicFactor(2);
-		$this->setAlignedOrigin($bestoriginx, $bestoriginy);
+		$this->setAlignedOrigin($bestoriginx, $bestoriginy,true);
 	}
 
 	/**
@@ -934,7 +928,7 @@ class GeographMapMosaic
 		$and_crit .= ")";
 		
 		$deleted = 0;
-		$root=&$_SERVER['DOCUMENT_ROOT'];
+		$root=preg_replace('/\/$/','',$_SERVER['DOCUMENT_ROOT']);
 
 		if ($memcache->valid) {
 			$sql="select * from mapcache
@@ -997,7 +991,7 @@ class GeographMapMosaic
 		global $memcache;
 		$db=&$this->_getDB();
 		
-		$root=&$_SERVER['DOCUMENT_ROOT'];
+		$root=preg_replace('/\/$/','',$_SERVER['DOCUMENT_ROOT']);
 
 		$sql="select * from mapcache where $crit";
 		$deleted = 0;
@@ -1022,8 +1016,13 @@ class GeographMapMosaic
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-		if (!$dummy)
+		if (!$dummy) {
+			//takes a long time..
+			unset($this->db);
+			$db=&$this->_getDB();
+			
 			$db->Execute("delete from mapcache where $crit");
+		}
 		return $deleted;
 	}
 	
@@ -1035,7 +1034,11 @@ class GeographMapMosaic
 		
 		$dir.="{$row['map_y']}/";
 		
-		$file="base_{$row['map_x']}_{$row['map_y']}_{$row['image_w']}_{$row['image_h']}_{$row['pixels_per_km']}.gd";
+		$palette="";
+		if ($row['palette']>0)
+			$palette="_".$row['palette'];
+		
+		$file="base_{$row['map_x']}_{$row['map_y']}_{$row['image_w']}_{$row['image_h']}_{$row['pixels_per_km']}{$palette}.gd";
 		
 		return $dir.$file;
 	}
@@ -1049,7 +1052,11 @@ class GeographMapMosaic
 		
 		$extension = ($row['pixels_per_km'] > 40 || $row['type_or_user'] < -20)?'jpg':'png';
 
-		$file="detail_{$row['map_x']}_{$row['map_y']}_{$row['image_w']}_{$row['image_h']}_{$row['pixels_per_km']}_{$row['type_or_user']}.$extension";
+		$palette="";
+		if ($row['palette']>0)
+			$palette="_".$row['palette'];
+		
+		$file="detail_{$row['map_x']}_{$row['map_y']}_{$row['image_w']}_{$row['image_h']}_{$row['pixels_per_km']}_{$row['type_or_user']}{$palette}.$extension";
 
 		return $dir.$file;
 	}

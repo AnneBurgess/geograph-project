@@ -45,6 +45,11 @@ if (isset($_GET['t'])) {
 	die("Missing Token");
 }
 
+if ($map->pixels_per_km > 40) {
+	$map->pixels_per_km = 40;
+	$map->image_w /= 2;
+	$map->image_h /= 2;
+}
 
 if ($map->pixels_per_km != 40 && $map->pixels_per_km != 4)
 	die("Invalid Parameter");
@@ -81,7 +86,7 @@ $cacheid='mapsheet|'.$token;
 if ($map->pixels_per_km == 4)
 	$smarty->cache_lifetime = 3600*24; //24hr cache
 
-if (isset($_GET['gridref_from']) && preg_match('/^[a-zA-Z]{1,3}\d{4}$/',$_GET['gridref_from'])) {
+if (isset($_GET['gridref_from']) && preg_match('/^[a-zA-Z]{1,2}\d{4}$/',$_GET['gridref_from'])) {
 	$smarty->assign('gridref_from', $_GET['gridref_from']);
 	$cacheid.='.'.$_GET['gridref_from'];
 }
@@ -108,7 +113,7 @@ if (!$smarty->is_cached($template, $cacheid))
 	$second = current($first);
 	$ri = $second['reference_index'];
 	
-	$letterlength = $CONF['gridpreflen'][$ri];
+	$letterlength = 3 - $ri; #todo should this be auto-realised by selecting a item from gridprefix? (or a grid_reference)
 
 	$smarty->assign('ofe', $letterlength + 1);
 	$smarty->assign('ofn', $letterlength + 3);

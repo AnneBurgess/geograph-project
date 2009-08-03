@@ -34,6 +34,49 @@ ALTER TABLE `moderation_log` ADD `type` ENUM( 'dummy', 'real' ) NOT NULL DEFAULT
 
 
 
+CREATE TABLE `gridimage_link` (
+  `gridimage_link_id` int(10) unsigned NOT NULL auto_increment,
+  `gridimage_id` int(10) unsigned NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `HTTP_Status` smallint(5) unsigned NOT NULL,
+  `HTTP_Last_Modified` varchar(64) NOT NULL,
+  `HTTP_Location` varchar(255) NOT NULL,
+  `match_score` smallint(6) NOT NULL,
+  `page_title` varchar(255) NOT NULL,
+  `last_checked` datetime NOT NULL,
+  `created` datetime NOT NULL,
+  `updated` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`gridimage_link_id`),
+  KEY `gridimage_id` (`gridimage_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+
+
+
+
+ALTER TABLE `gridimage_link` ADD `next_check` DATETIME NOT NULL AFTER `last_checked` ;
+
+
+
+UPDATE `gridimage_link` SET next_check = date_add(last_checked,interval 90 day) WHERE HTTP_Status = 200;
+
+UPDATE `gridimage_link` SET next_check = date_add(last_checked,interval 10 day) WHERE HTTP_Status > 0 AND HTTP_Status != 200;
+
+
+ ALTER IGNORE TABLE `gridimage_link` ADD UNIQUE (
+`gridimage_id` ,
+`url`
+) ;
+
+
+
+ALTER TABLE `gridimage_link` ADD `parent_link_id` INT UNSIGNED NOT NULL ;
+
+
+ALTER TABLE `gridimage_link` ADD `failure_count` SMALLINT NOT NULL ;
+
+
+
+
 
 CREATE TABLE `_tables` (
   `table_name` varchar(64) NOT NULL,
@@ -123,7 +166,18 @@ insert into os_gaz select * from geograph_staging.os_gaz;
 
 CREATE VIEW `user_stat_view` AS SELECT user_id,images,pow(10,floor(log10(images))+1) as images_d FROM user_stat;
 
+CREATE TABLE `milestone` (
+  `user_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `gridimage_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `milestone` mediumint(6) unsigned NOT NULL DEFAULT '0',
+  KEY `user_id` (`user_id`),
+  KEY `gridimage_id` (`gridimage_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+
+
+INSERT INTO `queries` (`id`, `searchdesc`, `searchclass`, `searchq`, `searchtext`, `limit1`, `limit2`, `limit3`, `limit4`, `limit5`, `limit6`, `limit7`, `limit8`, `limit9`, `limit10`, `x`, `y`, `displayclass`, `resultsperpage`, `orderby`, `breakby`, `crt_timestamp`, `user_id`, `searchuse`, `use_timestamp`, `favorite`) VALUES 
+(NULL, ', celebrating a milestone, newest first', 'Special', 'inner join milestone using (gridimage_id) where milestone.user_id > 0', '', '', '', '', '', '', '', '', 0, 0, 0, 0, 0, 'thumbs', 15, 'gridimage_id desc', 'milestone+', '2008-09-23 21:56:19', 3, 'search', '2008-09-23 22:20:21', 'N');
 
 
 
@@ -382,6 +436,26 @@ ALTER TABLE  `gridimage_daily` ADD  `vote_baysian` FLOAT NOT NULL ;
 
 
 
+ALTER TABLE  `hectad_assignment` ADD  `expiry` DATETIME NOT NULL AFTER  `updated` ;
+
+ALTER TABLE  `hectad_assignment` CHANGE  `status`  `status` ENUM(  'deleted',  'new',  'offered',  'accepted' ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT  'new';
+
+ALTER TABLE  `hectad_assignment` DROP INDEX  `user_id`;
+
+ALTER IGNORE TABLE  `hectad_assignment` ADD UNIQUE (
+`user_id` ,
+`hectad`
+);
+
+
+CREATE TABLE `gridsquare_assignment` (
+  `hectad_assignment_id` int(10) unsigned NOT NULL,
+  `gridsquare_id` int(10) unsigned NOT NULL,
+  `gridimage_id` int(10) unsigned NOT NULL,
+  `updated` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`hectad_assignment_id`,`gridsquare_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 
 
 
@@ -399,3 +473,107 @@ ALTER TABLE `queries` CHANGE `searchuse` `searchuse` ENUM( 'search', 'flickr', '
 ALTER TABLE `queries_archive` CHANGE `searchuse` `searchuse` ENUM( 'search', 'flickr', 'gazetteer', 'discuss', 'syndicator' ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL DEFAULT 'search';
 
 
+
+
+
+
+alter table mapcache add `palette`  smallint(6) NOT NULL DEFAULT '0';
+
+alter table mapcache drop PRIMARY KEY, add PRIMARY KEY (`map_x`,`map_y`,`image_w`,`image_h`,`pixels_per_km`,`type_or_user`,`palette`);
+
+alter table mapcache add index (`age`,`type_or_user`);
+
+
+
+alter table mapcache add key (map_x,map_y);
+
+/* explain select * from mapcache where map_x between 306 and 405 and map_y between 0 and 99 and pixels_per_km >= 40 and ((map_x-306) mod 5) != 0 and ((map_y-0) mod 5) != 0;
++----+-------------+----------+-------+---------------+-------+---------+------+-------+-------------+
+| id | select_type | table    | type  | possible_keys | key   | key_len | ref  | rows  | Extra       |
++----+-------------+----------+-------+---------------+-------+---------+------+-------+-------------+
+|  1 | SIMPLE      | mapcache | range | PRIMARY,map_x | map_x | 4       | NULL | 28193 | Using where |
++----+-------------+----------+-------+---------------+-------+---------+------+-------+-------------+
+*/
+
+
+
+CREATE TABLE  `gridimage_size` (
+ `gridimage_id` INT UNSIGNED NOT NULL ,
+ `width` SMALLINT UNSIGNED NOT NULL ,
+ `height` SMALLINT UNSIGNED NOT NULL ,
+PRIMARY KEY (  `gridimage_id` )
+) ENGINE = MYISAM ;
+
+
+
+
+ALTER TABLE  `user` ADD  `expand_about` TINYINT UNSIGNED NOT NULL DEFAULT  '0';
+
+
+
+
+
+
+alter table mapcache change `type_or_user` `type_or_user` int(11)  NOT NULL DEFAULT '0';
+
+
+
+
+CREATE TABLE  `gridimage_log` (
+ `gridimage_id` INT UNSIGNED NOT NULL ,
+ `hits` MEDIUMINT UNSIGNED NOT NULL ,
+ `hits_archive` INT UNSIGNED NOT NULL ,
+ `last_hit` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+PRIMARY KEY (  `gridimage_id` )
+) ENGINE = MYISAM ;
+
+
+CREATE TABLE `photo_log` (
+  `month` varchar(7) NOT NULL,
+  `gridimage_id` int(10) unsigned NOT NULL,
+  `views` mediumint(8) unsigned NOT NULL,
+  `entry` mediumint(8) unsigned NOT NULL,
+  `exits` mediumint(8) unsigned NOT NULL,
+  KEY `gridimage_id` (`gridimage_id`),
+  KEY `month` (`month`(4))
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+
+alter table `photo_log` ADD KEY `gridimage_id` (`gridimage_id`);
+
+INSERT INTO gridimage_log SELECT gridimage_id,0 as hits,sum(views) as hits_archive,'0000-00-00 00:00:00' as last_hit FROM photo_log GROUP BY gridimage_id ORDER BY NULL;
+
+
+#it just duplicates the primary key
+ALTER TABLE geobb_posts DROP KEY `post_id`;
+
+ALTER TABLE geobb_topics DROP KEY `topic_id`;
+
+
+#Good for selecting latest topics (in last post order), example:  SELECT topic_last_post_id FROM geobb_topics where forum_id!='5' AND forum_id!='11'   order by topic_last_post_id DESC limit 40;
+ALTER TABLE geobb_topics ADD KEY (`forum_id`,`topic_last_post_id` DESC);
+
+
+#Good for selecting latest topics (in topic order)
+ALTER TABLE geobb_topics ADD KEY (`forum_id`,`topic_id` DESC);
+
+
+#good for viewing a forum page
+ALTER TABLE geobb_topics ADD KEY (`forum_id`,sticky DESC,`topic_last_post_id` DESC);
+
+
+
+ALTER TABLE  `user` ADD  `use_autocomplete` TINYINT UNSIGNED NOT NULL DEFAULT  '0';
+
+
+alter table mapcache change age age mediumint NOT NULL DEFAULT '0';
+alter table mapcache2 change age age mediumint NOT NULL DEFAULT '0';
+
+
+CREATE TABLE `geocubes` (
+  `gridimage_id` int(10) unsigned NOT NULL,
+  `lastsent` datetime DEFAULT NULL,
+  `outstanding` tinyint(3) unsigned DEFAULT '0',
+  PRIMARY KEY (`gridimage_id`),
+  KEY `outstanding` (`outstanding`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;

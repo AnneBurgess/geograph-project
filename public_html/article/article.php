@@ -27,6 +27,8 @@ init_session();
 $smarty = new GeographPage;
 
 if (empty($_GET['page']) || preg_match('/[^\w\.\,-]/',$_GET['page'])) {
+	header("HTTP/1.0 404 Not Found");
+	header("Status: 404 Not Found");
 	$smarty->display('static_404.tpl');
 	exit;
 }
@@ -112,14 +114,14 @@ function smarty_function_articletext($input) {
 	$replacement[]='</h$1>';
 
 
-	$pattern[]='/(?<!["\'\[\/\!\w])([STNH]?[A-Z]{1}\d{4,10}|[A-Z]{3}\d{4,10})(?!["\'\]\/\!\w])/';
+	$pattern[]='/(?<!["\'\[\/\!\w])([STNH]?[A-Z]{1}\d{4,10})(?!["\'\]\/\!\w])/';
 	$replacement[]="<a href=\"http://{$_SERVER['HTTP_HOST']}/gridref/\\1\" target=\"_blank\">\\1</a>";
 
 	$pattern[]='/\[image id=(\d+) text=([^\]]+)\]/e';
 	$replacement[]="smarty_function_gridimage(array(id => '\$1',extra => '\$2'))";
 
 
-	$pattern[]='/(\!)([STNH]?[A-Z]{1}\d{4,10}|[A-Z]{3}\d{4,10})(?!["\'\]\/\!\w])/';
+	$pattern[]='/(\!)([STNH]?[A-Z]{1}\d{4,10})(?!["\'\]\/\!\w])/';
 	$replacement[]="\\2";
 
 	$pattern[]='/\[img=([^\] ]+)(| [^\]]+)\]/';
@@ -136,7 +138,7 @@ function smarty_function_articletext($input) {
 	//fix a bug where double spacing on a previous match would swallow the newline needed for the next
 	$pattern[]='/\n\n(<\w{1,3}>)\#/';
 	$replacement[]="\n\$1#";
-
+	
 	$pattern[]='/\n\n\#/';
 	$replacement[]="\n\r\n\$1#";
 	
@@ -162,7 +164,7 @@ function smarty_function_articletext($input) {
 	
 	$pattern=array(); $replacement=array();
 	
-	if (preg_match_all('/\[(small|)map *([STNH]?[A-Z]{1}[ \.]*\d{2,5}[ \.]*\d{2,5}|[A-Z]{3}[ \.]*\d{2,5}[ \.]*\d{2,5})( \w+|)\]/',$output,$m)) {
+	if (preg_match_all('/\[(small|)map *([STNH]?[A-Z]{1}[ \.]*\d{2,5}[ \.]*\d{2,5})( \w+|)\]/',$output,$m)) {
 		foreach ($m[0] as $i => $full) {
 			//lets add an rastermap too
 			$square = new Gridsquare;
@@ -241,6 +243,8 @@ if (count($page)) {
 	customCacheControl($mtime,$cacheid,($USER->user_id == 0));
 
 } else {
+	header("HTTP/1.0 404 Not Found");
+	header("Status: 404 Not Found");
 	$template = 'static_404.tpl';
 }
 

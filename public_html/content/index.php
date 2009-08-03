@@ -33,10 +33,22 @@ if (!empty($_GET)) {
 	$cacheid .= ".".md5(serialize($_GET));
 }
 
-if (isset($_REQUEST['inner'])) {
-	$template = 'content_iframe.tpl';
-} else {
+if (empty($_GET['inline']) && !isset($_REQUEST['inner'])) {
+	$inline = 'true';
+	$smarty->assign("inner",'');
+	$smarty->assign("target",'_self');
+	
 	$template = 'content.tpl';
+} else {
+	$inline = false;
+	$smarty->assign("inner",'inner');
+	$smarty->assign("target",'content');
+
+	if (isset($_REQUEST['inner'])) {
+		$template = 'content_iframe.tpl';
+	} else {
+		$template = 'content.tpl';
+	}
 }
 
 $db=NewADOConnection($GLOBALS['DSN']);
@@ -49,11 +61,11 @@ $mtime = strtotime($data['Update_time']);
 //can't use IF_MODIFIED_SINCE for logged in users as has no concept as uniqueness
 customCacheControl($mtime,$cacheid,($USER->user_id == 0));
 
-$smarty->assign('noSphinx', empty($CONF['sphinx_host'])); // FIXME -> global?
+$smarty->assign("inline",$inline);
 
-if ($template == 'content_iframe.tpl' && !$smarty->is_cached($template, $cacheid))
+if (($template == 'content_iframe.tpl' || $inline) && !$smarty->is_cached($template, $cacheid))
 {
-	$extra = 'inner';
+	$extra = $inline?'':'inner';
 	
 	$pageSize = 25;
 	
@@ -92,7 +104,7 @@ if ($template == 'content_iframe.tpl' && !$smarty->is_cached($template, $cacheid
 		$profile=new GeographUser($_GET['user_id']);
 		$title = "By ".($profile->realname);
 		
-	} elseif (!empty($_GET['q']) && !empty($CONF['sphinx_host'])) {
+	} elseif (!empty($_GET['q'])) {
 
 		// --------------
 		
@@ -121,7 +133,7 @@ if ($template == 'content_iframe.tpl' && !$smarty->is_cached($template, $cacheid
 		$smarty->assign("query_info",$sphinx->query_info);
 		
 		if (count($ids)) {
-			$where = "content_id IN(".join(",",$ids).")"; //FIXME crash: ... IN() ...
+			$where = "content_id IN(".join(",",$ids).")";
 		} else {
 			$where = "0";
 		}
@@ -217,10 +229,12 @@ if (!empty($_GET['debug'])) {
 	$smarty->assign('extra', $extra);
 	
 	if (!empty($_SERVER['QUERY_STRING']) && preg_match("/^[\w&;=+ %]/",$_SERVER['QUERY_STRING'])) {
-		$smarty->assign('extra_raw', "&amp;".htmlentities($_SERVER['QUERY_STRING']));
+		$smarty->assign('extra_raw', "&amp;".htmlentities(preg_replace('/^&+/','',$_SERVER['QUERY_STRING'])));
 	}
 	
-} else if ($template == 'content.tpl' && !$smarty->is_cached($template, $cacheid)) {
+} 
+
+if (($template == 'content.tpl' || $inline)  && !$smarty->is_cached($template, $cacheid)) {
 	
 	$prev_fetch_mode = $ADODB_FETCH_MODE;
 	$ADODB_FETCH_MODE = ADODB_FETCH_ASSOC;
@@ -230,18 +244,18 @@ if (!empty($_GET['debug'])) {
 		$where = " WHERE `source` != 'themed'";
 	}
 	
-	$list = $db->getAll("select title from content $where");
+	$listall = $db->getAll("select title from content $where");
 
 	$a = array();
-	foreach ($list as $i => $row) {
-		$alltext = preg_replace('/\W+/',' ',str_replace("'",'',$row['title']));
+	foreach ($listall as $i => $row) {
+		$alltext = preg_replace('/[^a-zA-Z0-9]+/',' ',str_replace("'",'',$row['title']));
 
 		$words = preg_split('/ +/',trim($alltext));
 
 		foreach ($words as $c => $w) {
 			if (preg_match('/^(geograph|amp|quot|pound|a|about|above|according|across|actually|adj|after|afterwards|again|against|all|almost|alone|along|already|also|although|always|among|amongst|an|and|another|any|anyhow|anyone|anything|anywhere|are|arent|around|as|at|b|be|became|because|become|becomes|becoming|been|before|beforehand|begin|beginning|behind|being|below|beside|besides|between|beyond|billion|both|but|by|c|can|cant|cannot|caption|co|co.|could|couldnt|d|did|didnt|do|does|doesnt|dont|down|during|e|each|eg|e.g.|eight|eighty|either|else|elsewhere|end|ending|enough|etc|etc.|even|ever|every|everyone|everything|everywhere|except|f|few|fifty|first|five|for|former|formerly|forty|found|four|from|further|g|h|had|has|hasnt|have|havent|he|hed|hell|hes|hence|her|here|heres|hereafter|hereby|herein|hereupon|hers|herself|him|himself|his|how|however|hundred|i|id|ill|im|ive|ie|if|in|inc|inc.|indeed|instead|into|is|isnt|it|its|its|itself|j|k|l|last|later|latter|latterly|least|less|let|lets|like|likely|ltd|m|made|make|makes|many|maybe|me|meantime|meanwhile|might|million|miss|more|moreover|most|mostly|mr|mrs|much|must|my|myself|n|namely|neither|never|nevertheless|next|nine|ninety|no|nobody|none|nonetheless|noone|nor|not|nothing|now|nowhere|o|of|off|often|on|once|one|ones|only|onto|or|other|others|otherwise|our|ours|ourselves|out|over|overall|own|p|per|perhaps|q|r|rather|recent|recently|s|same|seem|seemed|seeming|seems|seven|seventy|several|she|shed|shell|shes|should|shouldnt|since|six|sixty|so|some|somehow|someone|something|sometime|sometimes|somewhere|still|stop|such|t|taking|ten|than|that|thatll|thats|thatve|the|their|them|themselves|then|thence|there|thered|therell|therere|theres|thereve|thereafter|thereby|therefore|therein|thereupon|these|they|theyd|theyll|theyre|theyve|thirty|this|those|though|thousand|three|through|throughout|thru|thus|to|together|too|toward|towards|trillion|twenty|two|u|under|unless|unlike|unlikely|until|up|upon|us|used|using|v|very|via|w|was|wasnt|we|wed|well|were|weve|well|were|werent|what|whatll|whats|whatve|whatever|when|whence|whenever|where|wheres|whereafter|whereas|whereby|wherein|whereupon|wherever|whether|which|while|whither|who|whod|wholl|whos|whoever|whole|whom|whomever|whose|why|will|with|within|without|wont|would|wouldnt|x|y|yes|yet|you|youd|youll|youre|youve|your|yours|yourself|yourselves|z)$/i',$w)) {
 				//skip...
-			} elseif (preg_match('/^[A-Z]/',$w)) { // FIXME umlaut
+			} elseif (preg_match('/^[A-Z]/',$w)) {
 				//give promience to uppercased words
 				$a[strtolower($w)]+=2;
 			} elseif (!ctype_digit($w)) {
@@ -282,7 +296,7 @@ if (!empty($_GET['debug'])) {
 		}
 	
 		$smarty->assign('title', $title);
-		$smarty->assign('extra', "&amp;".htmlentities($_SERVER['QUERY_STRING']));
+		$smarty->assign('extra', "&amp;".htmlentities(preg_replace('/^&+/','',$_SERVER['QUERY_STRING'])));
 	}
 }
 if ($template == 'content.tpl' && $USER->registered) {

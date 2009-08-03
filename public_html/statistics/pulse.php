@@ -114,30 +114,25 @@ $table[] = array("Parameter"=>'',"Value"=>'');
 	if (strpos($_ENV["OS"],'Windows') === FALSE) {
 		//check load average
 		$buffer = "0 0 0";
-		if (is_readable("/proc/loadavg")) {
-			$f = fopen("/proc/loadavg","r");
-			if ($f)	{
-				if (!feof($f)) {
-					$buffer = fgets($f, 1024);
-					$loads = explode(" ",$buffer);
-					$load = (float)$loads[0];
-					
-					$name = "Hamsters currently sweating*";
-					$table[] = array("Parameter"=>$name,"Value"=>sprintf("%d",$load*10));
-					$smarty->assign("footnote","<p>* below 10 is good, above 20 is worse, above 40 is bad.</p>");
-					$table[] = array("Parameter"=>'',"Value"=>'');
-				}
-				fclose($f);			
+		$f = fopen("/proc/loadavg","r");
+		if ($f)	{
+			if (!feof($f)) {
+				$buffer = fgets($f, 1024);
+				$loads = explode(" ",$buffer);
+				$load = (float)$loads[0];
+				
+				$name = "Hamsters currently sweating*";
+				$table[] = array("Parameter"=>$name,"Value"=>sprintf("%d",$load*10));
+				$smarty->assign("footnote","<p>* below 10 is good, above 20 is worse, above 40 is bad.</p>");
+				$table[] = array("Parameter"=>'',"Value"=>'');
 			}
+			fclose($f);			
 		}
 	}
 	
 	$sql = "SELECT count(*) FROM event WHERE status='pending'";
 	calc("Pending Hamster Tasks",$sql);
-	
-	$sql = "SELECT COUNT(*) FROM mapcache WHERE age > 0 AND type_or_user >= -1";
-	calc("Map tiles to redraw",$sql);
-	
+		
 	$sql = "SELECT COUNT(*) FROM kmlcache WHERE rendered = 0";
 	calc("Superlayers tiles to update",$sql);
 	

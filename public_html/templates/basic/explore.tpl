@@ -14,13 +14,19 @@
 <h3>Outstanding achievement...</h3>
 <ul class="explore">
 
-	<li><a href="/statistics/fully_geographed.php">List <b>Fully Geographed Hectads</b></a> <small>(10 x 10 Gridsquares)</small> - include Image Mosaics!</li>
+	<li><a href="/statistics/fully_geographed.php">List <b>Fully Geographed Hectads</b></a> <small>(10 x 10 km squares)</small> - links to large Image Mosaics</li>
+
+	<li>{external href="http://www.nearby.org.uk/geograph/mosaic/" text="Mosaics of <b>Completed Myriads</b>"} <small>(100 x 100 km squares)</small> - using a Flash based viewer</li>
+
+        <li>{external href="http://www.nearby.org.uk/geograph/coverage/" text="<b>Historic Coverage Maps</b>"} <sup style="color:red">NEW!</sup> - includes buildup animations!</li>
 
 </ul>
 <h3>Selections...</h3>
 <ul class="explore">
 
 	<li><a href="/explore/searches.php"><b>Featured Searches</b></a> - hand picked example searches</li>
+
+	<li><a href="/explore/routes.php">Follow <b>National Routes</b></a>.</li>
 
 	<li><a name="counties"></a>View Photographs at <b>Centre Points</b>: <ul>
 		<li><a href="/explore/counties.php?type=modern">Modern Administrative Counties</a>,
@@ -29,7 +35,7 @@
 		<li><a href="/explore/counties.php?type=capital">(Irish) County Capitals</a>, <a href="/explore/cities.php">Cities and Large Towns</a></li>
 	</ul></li>
 
-	<li><a href="/gallery/"><b>Galleries</b></a> - hand picked images on varies themes</li>
+	<li><a href="/gallery/"><b>Galleries</b></a> - hand picked images on various themes</li>
 
 	<li><a href="/explore/places/" title="Explore by Place">Explore the <b>placename gazetteer</b></a> <sup style="color:red">New!</sup></li>
 

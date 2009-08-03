@@ -1,4 +1,4 @@
-<?php
+<?
 /**
  * $Project: GeoGraph $
  * $Id: rastermap.class.php 2876 2007-01-07 20:51:00Z barry $
@@ -24,34 +24,40 @@
  
 $db=NewADOConnection($GLOBALS['DSN']);
 
-if ((empty($_GET['key']) || preg_match("/[^\w\.@]/",$_GET['key'])) && empty($_GET['u']))
-	die("ERROR: no api key or email address");
-	
-$sql = "SELECT * FROM `apikeys` WHERE `apikey` = ".$db->Quote($_GET['key'])." AND (`ip` = INET_ATON('{$_SERVER['REMOTE_ADDR']}') OR `ip` = 0) AND `enabled` = 'Y'";
+if (isset($_SERVER['REMOTE_ADDR'])) {
+	if ((empty($_GET['key']) || preg_match("/[^\w\.@]/",$_GET['key'])) && empty($_GET['u']))
+		die("ERROR: no api key or email address");
 
-$profile = $db->GetRow($sql);
+	$sql = "SELECT * FROM `apikeys` WHERE `apikey` = ".$db->Quote($_GET['key'])." AND (`ip` = INET_ATON('{$_SERVER['REMOTE_ADDR']}') OR `ip` = 0) AND `enabled` = 'Y'";
 
-if ($profile['apikey']) {
-	$hardlimit = 2500;
-	$sql_hardlimit = " LIMIT $hardlimit";
-} elseif (!empty($_GET['u']) && preg_match("/^\d+$/",$_GET['u']) && (init_session() || true) && $USER->hasPerm('basic')) {
-	$sql_hardlimit = $hardlimit = '';
-} else {
-	#die("ERROR: invalid api key. contact support at geograph dot co dot uk");
-	$hardlimit = 250;
-	$sql_hardlimit = " LIMIT $hardlimit";
-} 
+	$profile = $db->GetRow($sql);
+
+	if ($profile['apikey']) {
+		$hardlimit = 2500;
+		$sql_hardlimit = " LIMIT $hardlimit";
+	} elseif (!empty($_GET['u']) && preg_match("/^\d+$/",$_GET['u']) && (init_session() || true) && $USER->hasPerm('basic')) {
+		$sql_hardlimit = $hardlimit = '';
+	} else {
+		#die("ERROR: invalid api key. contact support at geograph dot co dot uk");
+		$hardlimit = 250;
+		$sql_hardlimit = " LIMIT $hardlimit";
+	} 
+}
 
 #	#	#	#	#	#	#	#	#	#	#	#	#	#	#
 
-$sql_from = $sql_crit = '';
+$sql_from = $sql_crit = $sql_tables = '';
 
 $csvhead = "Id,Name,Grid Ref,Submitter,Image Class";
+if (!empty($_GET['desc'])) {
+	$csvhead .= ",Description";
+	$sql_from .= ',comment';
+}
 if (!empty($_GET['thumb'])) {
 	require_once('geograph/gridimage.class.php');
 	$gridimage = new GridImage;
 	$csvhead .= ",Thumb URL";
-	$sql_from = ',gi.user_id,x,y,reference_index';
+	$sql_from .= ',gi.user_id,x,y,reference_index';
 }
 if (!empty($_GET['gr'])) {
 	$csvhead .= ",Subject";
@@ -84,6 +90,13 @@ if (!empty($_GET['dir'])) {
 	$sql_from .= ",view_direction";
 }
 
+if (!empty($_GET['hits'])) {
+	$csvhead .= ",Hits";
+	$sql_from .= ",hits+hits_archive as hits";
+	$sql_tables .= " left join gridimage_log l on (l.gridimage_id = gi.gridimage_id)";
+}
+
+
 #	#	#	#	#	#	#	#	#	#	#	#	#	#	#
 
 if (!empty($_GET['ri']) && preg_match("/^\d$/",$_GET['ri']) ) {
@@ -109,7 +122,7 @@ if (!empty($_GET['since']) && preg_match("/^\d+-\d+-\d+$/",$_GET['since']) ) {
 		}
 	}
 	$sql_crit .= " ORDER BY upd_timestamp DESC LIMIT {$_GET['limit']}";
-} elseif (empty($_GET['i']) && empty($_GET['u'])) {
+} elseif (empty($_GET['i']) && empty($_GET['u']) && isset($_SERVER['REMOTE_ADDR'])) {
 	die("ERROR: whole db export disabled. contact support at geograph dot co dot uk");
 	$sql_crit .= " $sql_hardlimit";
 }
@@ -153,10 +166,11 @@ if ($i && !$user_crit ) {
 	if (!empty($_GET['ftf'])) {
 		$mod_sql .= " and ftf = 1"; 
 	}
-	$recordSet = &$db->Execute("select gridimage_id,title,grid_reference,gi.realname as credit_realname,if(gi.realname!='',gi.realname,user.realname) as realname,imageclass,nateastings,natnorthings,if(use6fig=1,6,natgrlen) as natgrlen,gi.user_id $sql_from 
+	$recordSet = &$db->Execute("select gi.gridimage_id,title,grid_reference,gi.realname as credit_realname,if(gi.realname!='',gi.realname,user.realname) as realname,imageclass,nateastings,natnorthings,if(use6fig=1,6,natgrlen) as natgrlen,gi.user_id $sql_from 
 	from user 
 	inner join gridimage gi using(user_id) 
 	inner join gridsquare using(gridsquare_id) 
+	$sql_tables
 	where $mod_sql $sql_crit");
 } else {
 	if (!empty($_GET['supp'])) {
@@ -165,8 +179,9 @@ if ($i && !$user_crit ) {
 	if (!empty($_GET['ftf'])) {
 		$mod_sql .= " and ftf = 1"; 
 	}
-	$recordSet = &$db->Execute("select gridimage_id,title,grid_reference,credit_realname,realname,imageclass,user_id $sql_from 
+	$recordSet = &$db->Execute("select gi.gridimage_id,title,grid_reference,credit_realname,realname,imageclass,user_id $sql_from 
 	from gridimage_search gi 
+	$sql_tables
 	where $mod_sql $sql_crit");
 }
 

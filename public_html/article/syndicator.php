@@ -31,6 +31,7 @@ $valid_formats=array('RSS0.91','RSS1.0','RSS2.0','MBOX','OPML','ATOM','ATOM0.3',
 if (isset($_GET['extension']) && !isset($_GET['format']))
 {
 	$_GET['format'] = strtoupper($_GET['extension']);
+	$_GET['format'] = str_replace('_','.',$_GET['format']);
 	$_GET['format'] = str_replace('GEO','Geo',$_GET['format']);
 	$_GET['format'] = str_replace('PHOTO','Photo',$_GET['format']);
 }
@@ -42,6 +43,8 @@ if (!empty($_GET['format']) && in_array($_GET['format'], $valid_formats))
 }
 
 $extension = ($format == 'KML')?'kml':'xml';
+
+$format_extension = strtolower(str_replace('.','_',$format));
 
 
 $rssfile=$_SERVER['DOCUMENT_ROOT']."/rss/article-{$format}-".md5(serialize($_GET)).".$extension";
@@ -62,14 +65,17 @@ if (!empty($_GET['admin'])) {
 	$rss->title = 'Geograph Pending Articles'; 
 	$rss->syndicationURL = "http://{$_SERVER['HTTP_HOST']}/article/syndicator.php?format=$format&amp;admin=1";
 
+} elseif (!empty($_GET['revdocs'])) {
+	$sql_where = "approved > 0 and article.article_cat_id = 7"; #Geograph Project - Information Documents
+	$rss->syndicationURL = "http://{$_SERVER['HTTP_HOST']}/article/syndicator.php?format=$format&amp;revdocs=1";
+
 } elseif (!empty($_GET['revisions'])) {
 	$sql_where = "approved > -1";
 	$rss->syndicationURL = "http://{$_SERVER['HTTP_HOST']}/article/syndicator.php?format=$format&amp;revisions=1";
 
 } else {
 	$sql_where = "licence != 'none' and approved > 0";
-	$rss->syndicationURL = "http://{$_SERVER['HTTP_HOST']}/article/feed/recent.".strtolower($format);
-	
+	$rss->syndicationURL = "http://{$_SERVER['HTTP_HOST']}/article/feed/recent.$format_extension";
 
 }
 
@@ -106,7 +112,7 @@ while (!$recordSet->EOF)
 	
 	$item->title = $recordSet->fields['title'];
 	
-	if (!empty($_GET['revisions'])) {
+	if (!empty($_GET['revisions']) || !empty($_GET['revdocs'])) {
 		$realname = $db->getOne("
 			select realname
 			from article_revisions
@@ -115,7 +121,13 @@ while (!$recordSet->EOF)
 	
 		$item->title .= " [rev #$version by $realname]";
 		$recordSet->fields['url'] = "history.php?page={$recordSet->fields['url']}";
-	} 
+		
+		$item->author = $realname;
+		$item->date = strtotime($recordSet->fields['update_time']);
+	} else {
+		$item->author = $recordSet->fields['realname'];
+		$item->date = strtotime($recordSet->fields['publish_date']);
+	}
 
 	//htmlspecialchars is called on link so dont use &amp;
 	$item->link = "http://{$_SERVER['HTTP_HOST']}/article/{$recordSet->fields['url']}";
@@ -127,8 +139,6 @@ while (!$recordSet->EOF)
 	if (strlen($description) > 160)
 		$description = substr($description,0,157)."...";
 	$item->description = $description;
-	$item->date = strtotime($recordSet->fields['publish_date']);
-	$item->author = $recordSet->fields['realname'];
 	$item->category = $recordSet->fields['category_name'];
 
 	if (($format == 'KML' || $format == 'GeoRSS' || $format == 'GPX') && $recordSet->fields['gridsquare_id']) {

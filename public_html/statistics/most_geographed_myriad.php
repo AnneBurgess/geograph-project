@@ -35,8 +35,6 @@ $cacheid='statistics|most_geographed_myriad';
 $smarty->caching = 2; // lifetime is per cache
 $smarty->cache_lifetime = 3600*24; //24hr cache
 
-$smarty->assign_by_ref('references_real',$CONF['references']);
-
 if (!$smarty->is_cached($template, $cacheid))
 {
 	$db=NewADOConnection($GLOBALS['DSN']);
@@ -47,10 +45,9 @@ if (!$smarty->is_cached($template, $cacheid))
 	$mosaic->setScale(4);
 	$mosaic->setMosaicFactor(2);
 
-	$mostarray = array();
 	
-	foreach ($CONF['references'] as $ri => $rname) {
-		$letterlength = $CONF['gridpreflen'][$ri];
+	foreach (array(1,2) as $ri) {
+		$letterlength = 3 - $ri; #should this be auto-realised by selecting a item from gridprefix?
 			
 		$origin = $db->CacheGetRow(100*24*3600,"select origin_x,origin_y from gridprefix where reference_index=$ri and origin_x > 0 order by origin_x,origin_y limit 1");
 		
@@ -87,10 +84,8 @@ if (!$smarty->is_cached($template, $cacheid))
 
 			$most[$id]['map_token'] = $mosaic->getToken();
 		}	
-		$mostarray += array($ri => $most);
+		$smarty->assign("most$ri", $most);	
 	}
-
-	$smarty->assign_by_ref("most", $mostarray);
 }
 
 

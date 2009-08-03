@@ -108,7 +108,7 @@ class ImageList
 	/**
 	* get image list for particular user
 	*/
-	function getImagesByUser($user_id, $statuses, $sort = 'submitted', $count=null,$advanced = false)
+	function getImagesByUser($user_id, $statuses, $sort = 'gridimage_id', $count=null,$advanced = false)
 	{
 		//we accept an array or a single status...
 		if (is_array($statuses))
@@ -420,8 +420,8 @@ class RecentImageList extends ImageList {
 
 			$start = $db->getOne("select recent_id from gridimage_recent where 1 $where");
 
-			$offset=rand(1,50);
-			$ids = range($start+$offset,$start+$offset+40);
+			$offset=rand(1,200);
+			$ids = range($start+$offset,$start+$offset+50);
 			shuffle($ids);
 
 			$id_string = join(',',array_slice($ids,0,5));

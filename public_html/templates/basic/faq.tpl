@@ -1,6 +1,16 @@
 {assign var="page_title" value="FAQ"}
 {include file="_std_begin.tpl"}
-<div id="faq">
+{literal}<style type="text/css">
+.helpbox { float:right;padding:5px;background:#dddddd;position:relative;font-size:0.8em;margin-left:20px;z-index:10; }
+.helpbox UL { margin-top:2px;margin-bottom:0;padding:0 0 0 1em; }
+.contents A { text-decoration:none; }
+.contents LI { padding-bottom:2px; }
+.answers h3 { padding:10px;border-top: 1px solid lightgrey;background-color:#f9f9f9; }
+.answers p { padding-left:20px; }
+div:target { background-color:orange;padding-bottom:10px; }
+.top { text-align:right;font-size:0.7em; }
+.top A { text-decoration:none; }
+</style>{/literal}
 <a name="top"></a>
 
  <div class="helpbox">
@@ -236,7 +246,7 @@ The <b>Geograph Website</b>:
 	<li>simple <a class="xml-geo" title="Geograph GeoRSS feed" href="http://{$http_host}/feed/recent.rss">GeoRSS</a></li>
 	<li><a title="Geograph GeoRSS and PhotoRSS feed" href="http://{$http_host}/feed/recent.geophotorss">GeoPhotoRSS</a></li>
 	<li>and <a title="Geograph GPX feed" href="http://{$http_host}/feed/recent.gpx">GPX1.0</a></li>
-	</ul>formats.</div>
+	formats.</ul></div>
 
 	<p>We provide an GeoRSS (RSS1.0) feed at 
 	<a title="Geograph RSS feed" href="http://{$http_host}/feed/recent.rss">http://{$http_host}/feed/recent.rss</a>
@@ -246,7 +256,7 @@ The <b>Geograph Website</b>:
 		<ul>
 			<li>You will find an <a class="xml-rss">RSS</a> button at the bottom of <a href="/search.php" title="photograph search">search results</a>, useful to keep updated on local images.</li>
 			{if $enable_forums}<li>Registered users can access RSS feed of the latest Topics in the Discussion Forum, and even subscribe to an individual Topic, just look for the <a class="xml-rss">RSS</a> button!</li>
-			<li>the Grid Square Discussions even supports <a class="xml-geo" title="Geograph Grid Square Discussions" href="http://{$http_host}/discuss/syndicator.php?forum={$forum_gridsquare}&amp;format=GeoRSS">GeoRSS</a>.</li>{/if}
+			<li>the Grid Square Discussions even supports <a class="xml-geo" title="Geograph Grid Square Discussions" href="http://{$http_host}/discuss/syndicator.php?forum=5&amp;format=GeoRSS">GeoRSS</a>.</li>{/if}
 			<li>Get a <a class="xml-rss" href="/article/feed/recent.rss">RSS</a> feed of recently updated <a href="/article/">Articles</a>.</li>
 			<li>The newer <a href="/content/">Content</a> section has a <a class="xml-rss" href="/content/feed/recent.rss">RSS</a> Feed.</li>
 			<li>Find out about <a href="/events/">organized meets</a> by following the <a class="xml-rss" href="/events/feed.rss">RSS</a> Feed.</li>
@@ -367,7 +377,6 @@ The <b>Geograph Website</b>:
 </div>
 <div class="top"><a href="#top">back to top</a></div>
 
-</div>
 </div>
 
 {include file="_std_end.tpl"}

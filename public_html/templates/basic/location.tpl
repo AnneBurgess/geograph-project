@@ -6,7 +6,7 @@
 	<p>{$errormsg}</p>
 {else}
 
-
+{if $gridref} 
 <dl style="float:right; margin:0px; position:relative">
 <dd style="font-family:verdana, arial, sans serif; font-size:0.8em">
 {if $square->reference_index eq 1}OSGB36{else}Irish{/if}: {getamap gridref=$gridrefraw text=$gridrefraw} [{$square->precision}m precision]<br/>
@@ -82,7 +82,7 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 	<li style="list-style-type:none">Maps: <img src="http://{$static_host}/img/links/20/map.png" width="20" height="20" alt="browse icon" align="absmiddle"/> <a href="/mapbrowse.php?t={$map_token}&amp;gridref_from={$gridref}"><b>Coverage</b></a>, <img src="http://{$static_host}/img/links/20/depth.png" width="20" height="20" alt="browse icon" align="absmiddle"/> <a href="/mapbrowse.php?t={$map_token}&amp;gridref_from={$gridref}&amp;depth=1"><b>Depth</b></a>{if $square->reference_index == 1}, <img src="http://{$static_host}/img/links/20/mapper.png" width="20" height="20" alt="browse icon" align="absmiddle"/> <a href="/mapper/?t={$map_token}&amp;gridref_from={$gridref}"><b>Draggable</b></a>, <img src="http://{$static_host}/img/links/20/dragcenti.png" width="20" height="20" alt="dragable centi icon" align="absmiddle"/> <a href="/mapper/?t={$map_token}&amp;gridref_from={$gridref}&amp;centi=1"><b>Centisquares</b></a><sup style="color:red">New!</sup>{/if} </li>
 
 </ul>
-<hr style="margin-top:5px"/>
+<hr style="margin-top:5px; margin-bottom:10px"/>
 {if $overview}
 <div style="clear:both; float:right; width:{$overview_width+30}px; position:relative">
 
@@ -115,7 +115,7 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 <div style="position:relative; float:left; width:40%;">
 
 <b>Mapping Websites</b>:
-<ul style="margin-top:0px; margin-bottom:0px">
+<ul style="margin-bottom:0px">
 	<li>{getamap gridref=$gridrefraw text="Get-a-Map&trade;"}</li>
 	{if $square->reference_index eq 1}
 		<li>{external href="http://www.magic.gov.uk/website/magic/opener.htm?startTopic=maggb&xygridref=`$square->nateastings`,`$square->natnorthings`&startscale=10000" text="magic.gov.uk"}{if $gridref6} ({external href="http://www.magic.gov.uk/website/magic/opener.htm?startTopic=maggb&xygridref=`$square->nateastings`,`$square->natnorthings`&startscale=5000" text="closer"}){/if}</li> 
@@ -132,7 +132,7 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 		<li>{external href="http://maps.live.com/default.aspx?v=2&amp;mkt=en-us&amp;cp=`$lat`~`$long`&amp;style=h&amp;lvl=14&amp;tilt=-90&amp;dir=0&amp;alt=-1000&amp;encType=1&amp;mapurl=http://`$http_host`/photo/`$id`.kml" text="maps.live.com" title="detailed aerial photography from maps.live.com"}</li>
 	{else}
 		<li><a title="Open in Google Earth" href="http://www.nearby.org.uk/googleEarth.kml.php?lat={$lat}&amp;long={$long}&amp;zoom=11" class="xml-kml" type="application/vnd.google-earth.kml+xml">KML</a> (Google Earth)</li>
-		<li>{external title="Open in Google Maps" href="http://maps.google.co.uk/maps?q=http%3A%2F%2Fwww.nearby.org.uk%2FgoogleEarth.kml.php%3Flat%3D`$lat`%26long%3D`$long`%26zoom%3D11&zoom=11" text="Google Maps"}</li>
+		<li>{external title="Open in Google Maps" href="http://maps.google.co.uk/maps?q=http%3A%2F%2Fwww.nearby.org.uk%2FgoogleEarth.kml.php%3Flat%3D`$lat`%26long%3D`$long`%26zoom%3D11&z=11" text="Google Maps"}</li>
 		<li>{external href="http://maps.live.com/default.aspx?v=2&amp;mkt=en-us&amp;cp=`$lat`~`$long`&amp;style=h&amp;lvl=14&amp;tilt=-90&amp;dir=0&amp;alt=-1000&amp;encType=1" text="maps.live.com" title="detailed aerial photography from maps.live.com"}</li>
 	{/if}
 
@@ -140,7 +140,7 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 </div>
 <div style="position:relative; float:left; width:40%;">
 <b>What's nearby?</b>
-<ul style="margin-top:0px">
+<ul>
 	{if $image_taken}
 		{assign var="imagetakenurl" value=$image_taken|date_format:"&amp;MONTH=%m&amp;YEAR=%Y"}
 		<li>{external href="http://www.weatheronline.co.uk/cgi-bin/geotarget?LAT=`$lat`&amp;LON=`$long``$imagetakenurl`" text="weatheronline.co.uk" title="weather at the time this photo was taken from weatheronline.co.uk"}</li>
@@ -162,7 +162,38 @@ title="{$long|string_format:"%.5f"}">{$longdm}</abbr></span>
 	{/if}
 </ul>
 </div>
-<br style="clear:both"/>
+<br style="clear:both"/>{/if}
+<hr/>
+<form action="/location.php" method="get">
+<div>
+	<h3>Jump to another location</h3>
+	<label for="gridref">Enter grid reference (e.g. SY9582)</label>
+	<input id="gridref" type="text" name="gridref" value="{$gridrefraw|escape:'html'}" size="8"/>
+	<input type="submit" name="setref" value="Show &gt;"/>
+
+	
+	<br/>
+	<i>or</i><br/>
+
+	<label for="gridsquare">Choose grid reference</label>
+	<select id="gridsquare" name="gridsquare">
+		{html_options options=$prefixes selected=$gridsquare}
+	</select>
+	<label for="eastings">E</label>
+	<select id="eastings" name="eastings">
+		{html_options options=$kmlist selected=$eastings}
+	</select>
+	<label for="northings">N</label>
+	<select id="northings" name="northings">
+		{html_options options=$kmlist selected=$northings}
+	</select>
+
+	<input type="submit" name="setpos" value="Show &gt;"/>
+</div>
+</form>
+
+
+
 <br/>
 	{if $rastermap->enabled}
 		{$rastermap->getFooterTag()}
