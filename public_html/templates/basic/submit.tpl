@@ -369,9 +369,8 @@ Below is a full-size preview of the image we will store for grid reference
 <div style="position:relative; background-color:#dddddd; padding-left:10px;padding-top:1px;padding-bottom:1px;">
 <h3><a name="geograph"></a>Is the image a &quot;geograph&quot;?</h3>
 
-<p>If you're the first to submit a proper &quot;geograph&quot; for {$gridref}
-you'll get a geograph point added to your profile and the warm glow that comes
-with it.</p>
+<p>You'll get a geograph point added to your profile, and the warm glow that goes with it, for the first Geograph you submit for {$gridref}
+You might even get a TPoint or a first, second, third or fourth visitor point to go with it. </p>
 <p>So what makes an image a genuine geograph?</p>
 <ul>
 <li>The image subject and the photographer must both be within the grid square {$gridref}.</li>
